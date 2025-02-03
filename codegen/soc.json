@@ -1,0 +1,44 @@
+{
+  "ProjectName": "SOCSimulator",
+  "SimTop": {
+    "ClassName": "SOCSimTop",
+    "AppName": "app_soc",
+    "SimBases": [
+      {
+        "Name": "CPU",
+        "ClassName": "CPU",
+        "SharedLib": "False",
+        "SubFolder": "",
+        "SimModules": [
+          {
+            "Name": "IFStage",
+            "SharedLib": "False"
+          },
+          {
+            "Name": "IDStage",
+            "SharedLib": "False"
+          },
+          {
+            "Name": "EXEStage",
+            "SharedLib": "False"
+          },
+          {
+            "Name": "MEMStage",
+            "SharedLib": "False"
+          },
+          {
+            "Name": "WBStage",
+            "SharedLib": "False"
+          }
+        ]
+      },
+      {
+        "Name": "DataMemory",
+        "ClassName": "DataMemory",
+        "SharedLib": "False",
+        "SubFolder": "",
+        "SimModules": []
+      }
+    ]
+  }
+}

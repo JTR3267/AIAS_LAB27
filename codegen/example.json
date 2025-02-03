@@ -1,0 +1,41 @@
+{
+  "ProjectName": "CPUSimulator",
+  "SimTop": {
+    "ClassName": "CustomSimTop",
+    "AppName": "app_cpu",
+    "SimBases": [
+      {
+        "Name": "CPUSim",
+        "ClassName": "CPUSim",
+        "SharedLib": "False",
+        "SubFolder": "",
+        "SimModules": [
+          {
+            "Name": "IF",
+            "SharedLib": "True"
+          },
+          {
+            "Name": "ID",
+            "SharedLib": "True"
+          },
+          {
+            "Name": "EXE",
+            "SharedLib": "True"
+          },
+          {
+            "Name": "MEM",
+            "SharedLib": "True"
+          },
+          {
+            "Name": "WB",
+            "SharedLib": "True"
+          },
+          {
+            "Name": "I_MEM",
+            "SharedLib": "True"
+          }
+        ]
+      }
+    ]
+  }
+}

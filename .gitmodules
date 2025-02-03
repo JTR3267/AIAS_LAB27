@@ -1,0 +1,3 @@
+[submodule "third-party/acalsim"]
+	path = third-party/acalsim
+	url = ../acalsim.git
