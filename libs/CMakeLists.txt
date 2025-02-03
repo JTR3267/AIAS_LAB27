@@ -19,10 +19,7 @@ file(GLOB_RECURSE LIBS_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
 # ##########################################################################
 add_library(${LIB_NAME} ${LIBS_SRCS})
 
-set_target_properties(
-    ${LIB_NAME}
-    PROPERTIES POSITION_INDEPENDENT_CODE ON
-)
+set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Set C++ version to C++20
 set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD 20)
@@ -35,10 +32,7 @@ target_link_libraries(
 )
 
 # Set the libraries include path
-target_include_directories(
-    ${LIB_NAME}
-    PUBLIC ${PROJECT_SOURCE_DIR}/include
-)
+target_include_directories(${LIB_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 # ##########################################################################
 # # Compile Definitions

@@ -11,7 +11,6 @@
 
 #include "ACALSim.hh"
 
-
 /**
  * @brief A class representing a simulator template.
  *
@@ -49,8 +48,6 @@ public:
 	 * @note Release dynamic memory, clean up the event queue, etc., in this function.
 	 */
 	void cleanup() override;
-
 };
-
 
 #endif  // SRC_APP_SOC_INCLUDE_CPU_HH_

@@ -31,7 +31,7 @@ target_link_libraries(
     ${APP_PREFIX_LIB_NAME}
     PUBLIC Threads::Threads
     PUBLIC ACALSim::acalsim
-	PUBLIC ${PROJECT_NAME}::${PROJECT_NAME}
+    PUBLIC ${PROJECT_NAME}::${PROJECT_NAME}
 )
 
 add_target_compile_definitions(${APP_PREFIX_LIB_NAME}
@@ -44,4 +44,3 @@ add_target_compile_definitions(${APP_PREFIX_LIB_NAME}
 target_include_directories(${APP_PREFIX_LIB_NAME} PUBLIC ${APP_INC_DIR})
 
 add_library(${PROJECT_NAME}::${APP_LIB_NAME} ALIAS ${APP_PREFIX_LIB_NAME})
-
