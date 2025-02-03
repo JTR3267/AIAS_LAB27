@@ -25,7 +25,7 @@
 #include <string>
 
 #include "ACALSim.hh"
-
+#include "InstMemory.hh"
 
 /**
  * @brief A class representing a simulator template.
@@ -80,7 +80,12 @@ public:
 	 * function correctly.
 	 */
 	void postSimInitSetup() override;
-};
 
+	void registerConfigs() override;
+
+private:
+	uint8_t*    dmem;
+	InstMemory* imem;
+};
 
 #endif  // SRC_APP_SOC_INCLUDE_SOCSIMTOP_HH_

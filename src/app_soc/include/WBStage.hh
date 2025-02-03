@@ -1,11 +1,9 @@
 #ifndef SRC_APP_SOC_INCLUDE_WBSTAGE_HH_
 #define SRC_APP_SOC_INCLUDE_WBSTAGE_HH_
 
-
 #include <string>
 
 #include "ACALSim.hh"
-
 
 /**
  * @brief A class representing a component template.
@@ -35,8 +33,6 @@ public:
 	 * @note Design what the component can do or print out some information here each iteration.
 	 */
 	void step() override;
-
 };
-
 
 #endif  // SRC_APP_SOC_INCLUDE_WBSTAGE_HH_
