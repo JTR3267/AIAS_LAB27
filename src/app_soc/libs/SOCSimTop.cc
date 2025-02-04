@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023-2024 Playlab/ACAL
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "SOCSimTop.hh"
 
 #include "CPU.hh"
@@ -11,9 +27,7 @@
  * --------------------------------------------------------------------------------------*/
 
 SOCSimTop::SOCSimTop(const std::string& _configFilePath, const std::string& _tracingFileName)
-    : acalsim::SimTop(_configFilePath, _tracingFileName) {
-	this->imem = new InstMemory();
-}
+    : acalsim::SimTop(_configFilePath, _tracingFileName) {}
 
 SOCSimTop::SOCSimTop(const std::vector<std::string>& _configFilePaths, const std::string& _tracingFileName)
     : acalsim::SimTop(_configFilePaths, _tracingFileName) {}
@@ -23,12 +37,17 @@ SOCSimTop::~SOCSimTop() {}
 void SOCSimTop::control_thread_step() {}
 
 void SOCSimTop::registerSimulators() {
+	int memory_size = acalsim::top->getParameter<int>("SOC", "memory_size");
+
 	// Generate and Register Simulator
 	auto CPU_sim        = new CPU("CPU");
-	auto DataMemory_sim = new DataMemory("DataMemory");
+	auto DataMemory_sim = new DataMemory("DataMemory", memory_size);
 
 	this->addSimulator(CPU_sim);
 	this->addSimulator(DataMemory_sim);
+
+	CPU_sim->addDownStream(DataMemory_sim, "DSDMEM");
+	DataMemory_sim->addUpStream(CPU_sim, "USCPU");
 
 	// Connect SimPort
 
@@ -40,13 +59,6 @@ void SOCSimTop::registerConfigs() {
 	this->addConfig("SOC", config);
 }
 
-void SOCSimTop::preSimInitSetup() {
-	std::string asm_file_path = acalsim::top->getParameter<std::string>("SOC", "asm_file_path");
-	int         memory_size   = acalsim::top->getParameter<int>("SOC", "memory_size");
-
-	this->dmem = new uint8_t[memory_size];
-	this->imem->parse(asm_file_path, this->dmem);
-	this->imem->normalize_labels();
-}
+void SOCSimTop::preSimInitSetup() {}
 
 void SOCSimTop::postSimInitSetup() {}
