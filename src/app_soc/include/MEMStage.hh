@@ -62,8 +62,6 @@ public:
 	 */
 	void execDataPath();
 
-	void processRespPkt(const uint32_t& _data);
-
 	void setStatus(mem_stage_status _status) { this->status = _status; }
 
 	void checkMemoryAccess(std::shared_ptr<exe_stage_out> _info);
@@ -72,9 +70,12 @@ public:
 
 	void sendReqToMemory(MemReqPacket* _pkt);
 
+	void setRespPkt(MemRespPacket* _pkt) { this->resp_pkt = _pkt; }
+
 private:
 	Register<exe_stage_out>* exe_mem_reg;
 	Register<mem_stage_out>* mem_wb_reg;
+	MemRespPacket*           resp_pkt;
 	mem_stage_status         status = mem_stage_status::IDLE;
 };
 

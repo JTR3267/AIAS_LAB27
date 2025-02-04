@@ -79,6 +79,9 @@ void CPU::registerModules() {
 void CPU::execDataPath() {
 	dynamic_cast<IDStage*>(this->getModule("IDStage"))->execDataPath();
 	dynamic_cast<IFStage*>(this->getModule("IFStage"))->execDataPath();
+	dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->execDataPath();
+	dynamic_cast<MEMStage*>(this->getModule("MEMStage"))->execDataPath();
+	dynamic_cast<WBStage*>(this->getModule("WBStage"))->execDataPath();
 }
 
 void CPU::updatePipeRegisters() {
@@ -87,6 +90,7 @@ void CPU::updatePipeRegisters() {
 	this->exe_mem_reg->update();
 	this->mem_wb_reg->update();
 }
+
 void CPU::updateRegisterFile() {
 	for (int i = 0; i < 32; i++) { this->regs[i]->update(); }
 }
@@ -119,7 +123,7 @@ void CPU::checkNextCycleEvent() {
 	bool stall = dynamic_cast<IFStage*>(this->getModule("IFStage"))->getStallStatus() |
 	             dynamic_cast<IDStage*>(this->getModule("IDStage"))->getStallStatus() |
 	             dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->getStallStatus();
-	// bool hcf = dynamic_cast<EXEStage*>(this->getModule("WBStage"))->checkHcf();
+	bool hcf = dynamic_cast<WBStage*>(this->getModule("WBStage"))->checkHcf();
 	if (!stall) {
 		auto rc    = acalsim::top->getRecycleContainer();
 		auto event = rc->acquire<CPUSingleIterationEvent>(&CPUSingleIterationEvent::renew, this);
@@ -130,6 +134,8 @@ void CPU::checkNextCycleEvent() {
 void CPU::updateSystemStates() {
 	this->updatePipeRegisters();
 	this->updateRegisterFile();
+	this->updatePC();
+	this->checkNextCycleEvent();
 }
 
 void CPU::step() {
@@ -137,6 +143,15 @@ void CPU::step() {
 		auto packet = this->s_port_->pop();
 		this->accept(acalsim::top->getGlobalTick(), *packet);
 	}
+}
+
+void CPU::handler(MemRespPacket* _pkt) {
+	// Update the state of MEM stage about the received packet
+	dynamic_cast<MEMStage*>(this->getModule("MEMStage"))->setRespPkt(_pkt);
+
+	// Run the internal logic of all stages
+	this->execDataPath();
+	this->updateSystemStates();
 }
 
 void CPU::cleanup() {}

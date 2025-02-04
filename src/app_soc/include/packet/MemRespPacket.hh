@@ -29,6 +29,8 @@ public:
 	void visit(acalsim::Tick _when, acalsim::SimModule& _module) override;
 	void visit(acalsim::Tick _when, acalsim::SimBase& _simulator) override;
 
+	uint32_t getData() const { return this->data; }
+
 private:
 	uint32_t data;
 };

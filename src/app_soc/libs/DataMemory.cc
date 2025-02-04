@@ -18,7 +18,9 @@
 
 DataMemory::DataMemory(const std::string& name, size_t _size, const std::string& _m_port, const std::string& _s_port)
     : acalsim::CPPSimBase(name), BaseMemory(_size) {
+	// Generate and Register MasterPorts
 	this->m_port_ = this->addMasterPort(_m_port);
+	// Generate and Register SlavePorts
 	this->s_port_ = this->addSlavePort(_s_port, 1);
 }
 

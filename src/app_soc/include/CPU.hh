@@ -30,6 +30,7 @@
 #include "DataMemory.hh"
 #include "InstMemory.hh"
 #include "Register.hh"
+#include "packet/MemRespPacket.hh"
 
 /**
  * @brief A class representing a simulator template.
@@ -70,10 +71,26 @@ public:
 	void cleanup() override;
 
 	void execDataPath();
+
+	/**
+	 * Update system states according to the outbound results
+	 * of all stages.
+	 *
+	 * 1. All stages update the inbound registers of the next stage.
+	 * 2. WB updates register file with WB stage's outbound result.
+	 * 3. Update PC.
+	 * 4. Schedule a CpuSingleCycleEvent at the next cycle
+	 *    if not all stages are set to stall or a program
+	 *    termination instruction `hcf` is not detected in WB stage
+	 */
 	void updateSystemStates();
+
 	void updatePipeRegisters();
+
 	void updateRegisterFile();
+
 	void updatePC();
+
 	void checkNextCycleEvent();
 
 	void printRegfile();
@@ -91,6 +108,8 @@ public:
 	}
 
 	acalsim::MasterPort* getMasterPort() { return this->m_port_; }
+
+	void handler(MemRespPacket* _pkt);
 
 private:
 	InstMemory*              imem;

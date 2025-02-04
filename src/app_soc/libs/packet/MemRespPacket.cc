@@ -16,16 +16,16 @@
 
 #include "packet/MemRespPacket.hh"
 
-#include "MEMStage.hh"
+#include "CPU.hh"
 
 void MemRespPacket::visit(acalsim::Tick _when, acalsim::SimModule& _module) {
-	if (auto mem = dynamic_cast<MEMStage*>(&_module)) {
-		mem->processRespPkt(this->data);
-	} else {
-		CLASS_ERROR << "Invalid module type for MemRespPacket";
-	}
+	CLASS_ERROR << "void MemRespPacket::visit(SimModule& _simulator)is not implemented yet!";
 }
 
 void MemRespPacket::visit(acalsim::Tick _when, acalsim::SimBase& _simulator) {
-	CLASS_ERROR << "void MemRespPacket::visit(SimModule& _simulator)is not implemented yet!";
+	if (auto cpu = dynamic_cast<CPU*>(&_simulator)) {
+		cpu->handler(this);
+	} else {
+		CLASS_ERROR << "Invalid module type for MemRespPacket";
+	}
 }

@@ -30,22 +30,16 @@ void MEMStage::init() { CLASS_INFO << "MEMStage Initialization"; }
 
 void MEMStage::step() {}
 
-void MEMStage::processRespPkt(const uint32_t& _data) {
+void MEMStage::execDataPath() {
 	if (this->status == mem_stage_status::WAIT) {
 		// Send the data to the WB stage
-		auto mem_out               = std::make_shared<mem_stage_out>();
-		mem_out->inst              = this->exe_mem_reg->get()->inst;
-		mem_out->mem_val.load_data = _data;
+		auto mem_out     = std::make_shared<mem_stage_out>();
+		mem_out->inst    = this->exe_mem_reg->get()->inst;
+		mem_out->mem_val = {.load_data = this->resp_pkt->getData()};
 		this->mem_wb_reg->set(mem_out);
 		// Set the status to IDLE
 		this->setStatus(mem_stage_status::IDLE);
-	} else {
-		CLASS_ERROR << "Invalid MEMStage status";
-	}
-}
-
-void MEMStage::execDataPath() {
-	if (this->status == mem_stage_status::IDLE) {
+	} else if (this->status == mem_stage_status::IDLE) {
 		auto info      = this->exe_mem_reg->get();
 		auto inst_type = info->inst.op;
 		if (inst_type == instr_type::SB || inst_type == instr_type::BEQ) {
@@ -78,18 +72,18 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 			break;
 		}
 		case instr_type::JAL: {
-			auto mem_out                     = std::make_shared<mem_stage_out>();
-			mem_out->inst                    = inst;
-			mem_out->mem_val.pc_plus_4_to_rd = (_info->pc + 4);
+			auto mem_out     = std::make_shared<mem_stage_out>();
+			mem_out->inst    = inst;
+			mem_out->mem_val = {.pc_plus_4_to_rd = (_info->pc + 4)};
 			this->mem_wb_reg->set(mem_out);
 			break;
 		}
 		case instr_type::ADD:
 		case instr_type::ADDI:
 		case instr_type::LUI: {
-			auto mem_out             = std::make_shared<mem_stage_out>();
-			mem_out->inst            = inst;
-			mem_out->mem_val.alu_out = _info->alu_out;
+			auto mem_out     = std::make_shared<mem_stage_out>();
+			mem_out->inst    = inst;
+			mem_out->mem_val = {.alu_out = _info->alu_out};
 			this->mem_wb_reg->set(mem_out);
 			break;
 		}
