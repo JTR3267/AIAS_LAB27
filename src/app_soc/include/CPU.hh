@@ -43,11 +43,7 @@ public:
 	 *
 	 * @param name The name of the simulator.
 	 */
-	CPU(const std::string& _name, const std::string& _m_port, const std::string& _s_port) : acalsim::CPPSimBase(_name) {
-		this->imem    = new InstMemory();
-		this->m_port_ = this->addMasterPort(_m_port);
-		this->s_port_ = this->addSlavePort(_s_port, 1);
-	}
+	CPU(const std::string& _name, const std::string& _m_port, const std::string& _s_port);
 
 	~CPU();
 
@@ -88,6 +84,13 @@ public:
 		CLASS_ASSERT(index >= 0 && index < 32);
 		return *(this->regs[index]->get());
 	}
+
+	void writeRegister(int index, uint32_t value) {
+		CLASS_ASSERT(index >= 0 && index < 32);
+		this->regs[index]->set(std::make_shared<uint32_t>(value));
+	}
+
+	acalsim::MasterPort* getMasterPort() { return this->m_port_; }
 
 private:
 	InstMemory*              imem;

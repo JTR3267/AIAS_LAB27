@@ -40,11 +40,7 @@ public:
 	 *
 	 * @param name The name of the simulator.
 	 */
-	DataMemory(const std::string& name, size_t _size, const std::string& _m_port, const std::string& _s_port)
-	    : acalsim::CPPSimBase(name), BaseMemory(_size) {
-		this->m_port_ = this->addMasterPort(_m_port);
-		this->s_port_ = this->addSlavePort(_s_port, 1);
-	}
+	DataMemory(const std::string& name, size_t _size, const std::string& _m_port, const std::string& _s_port);
 
 	~DataMemory();
 
@@ -54,6 +50,8 @@ public:
 	void init() override;
 
 	void registerModules();
+
+	void processReqPkt();
 
 	/**
 	 * @brief The step function of the simulator.

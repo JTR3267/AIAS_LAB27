@@ -31,13 +31,13 @@ public:
 	MemReqPacket(const std::string& _name, const uint32_t& _addr, const uint32_t& _data, const ReqType& _type) {}
 	~MemReqPacket() {}
 
-	void visit(Tick _when, SimModule& _module) override;
-	void visit(Tick _when, SimBase& _simulator) override;
+	void visit(acalsim::Tick _when, acalsim::SimModule& _module) override;
+	void visit(acalsim::Tick _when, acalsim::SimBase& _simulator) override;
 
 private:
 	uint32_t addr;
 	uint32_t data;
 	ReqType  type;
-}
+};
 
 #endif  // SRC_APP_SOC_INCLUDE_MEMREQPACKET_HH_

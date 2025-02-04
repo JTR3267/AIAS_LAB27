@@ -16,9 +16,13 @@
 
 #include "MEMStage.hh"
 
-#include "MemReqPacket.hh"
+#include "CPU.hh"
+#include "IDStage.hh"
+#include "IFStage.hh"
 
-MEMStage::MEMStage(const std::string& name) : acalsim::SimModule(name) {}
+MEMStage::MEMStage(const std::string& _name, Register<exe_stage_out>* _exe_mem_reg,
+                   Register<mem_stage_out>* _mem_wb_reg)
+    : acalsim::SimModule(_name), exe_mem_reg(_exe_mem_reg), mem_wb_reg(_mem_wb_reg){};
 
 MEMStage::~MEMStage() {}
 
@@ -30,7 +34,7 @@ void MEMStage::processRespPkt(const uint32_t& _data) {
 	if (this->status == mem_stage_status::WAIT) {
 		// Send the data to the WB stage
 		auto mem_out               = std::make_shared<mem_stage_out>();
-		mem_out->inst              = inst;
+		mem_out->inst              = this->exe_mem_reg->get()->inst;
 		mem_out->mem_val.load_data = _data;
 		this->mem_wb_reg->set(mem_out);
 		// Set the status to IDLE
@@ -43,14 +47,14 @@ void MEMStage::processRespPkt(const uint32_t& _data) {
 void MEMStage::execDataPath() {
 	if (this->status == mem_stage_status::IDLE) {
 		auto info      = this->exe_mem_reg->get();
-		auto inst_type = info->inst.inst_type;
+		auto inst_type = info->inst.op;
 		if (inst_type == instr_type::SB || inst_type == instr_type::BEQ) {
 			this->checkMemoryAccess(info);
 		} else {
 			// Check for data hazard
 			if (this->checkDataHazard(info->inst.a2.reg, info->inst.a3.reg)) {
-				dynamic_cast<SimModule*>(this->getSimulator()->getModule("IFStage"))->setStall();
-				dynamic_cast<SimModule*>(this->getSimulator()->getModule("IDStage"))->setStall();
+				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
+				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
 			}
 			this->checkMemoryAccess(info);
 		}
@@ -59,55 +63,60 @@ void MEMStage::execDataPath() {
 	}
 }
 
-void MEMStage::checkMemoryAccess(const mem_stage_info* _info) {
+void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 	auto inst      = _info->inst;
-	auto inst_type = inst.inst_type;
+	auto inst_type = inst.op;
 	switch (inst_type) {
-		case instr_type::SB:
-			auto memReq =
-			    std::make_shared<MemReqPacket>("MemReq", _info.alu_out, _info.write_data, MemReqPacket::ReqType::WRITE);
+		case instr_type::SB: {
+			auto memReq = new MemReqPacket("MemReq", _info->alu_out, _info->write_data, MemReqPacket::ReqType::WRITE);
 			this->sendReqToMemory(memReq);
 			break;
-		case instr_type::LW:
-			auto memReq = std::make_shared<MemReqPacket>("MemReq", _info.alu_out, 0, MemReqPacket::ReqType::READ);
+		}
+		case instr_type::LW: {
+			auto memReq = new MemReqPacket("MemReq", _info->alu_out, 0, MemReqPacket::ReqType::READ);
 			this->sendReqToMemory(memReq);
 			break;
-		case instr_type::JAL:
+		}
+		case instr_type::JAL: {
 			auto mem_out                     = std::make_shared<mem_stage_out>();
 			mem_out->inst                    = inst;
-			mem_out->mem_val.pc_plus_4_to_rd = (_info.pc + 4);
+			mem_out->mem_val.pc_plus_4_to_rd = (_info->pc + 4);
 			this->mem_wb_reg->set(mem_out);
 			break;
+		}
 		case instr_type::ADD:
 		case instr_type::ADDI:
-		case instr_type::LUI:
-			auto mem_out     = std::make_shared<mem_stage_out>();
-			mem_out->inst    = inst;
-			mem_out->alu_out = _info.alu_out;
+		case instr_type::LUI: {
+			auto mem_out             = std::make_shared<mem_stage_out>();
+			mem_out->inst            = inst;
+			mem_out->mem_val.alu_out = _info->alu_out;
 			this->mem_wb_reg->set(mem_out);
 			break;
-		case instr_type::BEQ:
+		}
+		case instr_type::BEQ: {
 			auto mem_out  = std::make_shared<mem_stage_out>();
 			mem_out->inst = inst;
 			this->mem_wb_reg->set(mem_out);
 			break;
+		}
 		default: CLASS_ERROR << "Invalid instruction type"; break;
 	}
 }
 
 bool MEMStage::checkDataHazard(int _rs1, int _rs2) {
 	// Get rs1 and rs2 from the ID stage inbound register
-	auto id_reg = this->getSimulator()->if_->getRegFromID();
-	auto rd     = id_reg->get()->inst.a1.reg;
+	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
+	auto rd     = id_reg->inst.a1.reg;
 	return (rd == _rs1 || rd == _rs2);
 }
 
-void MEMStage::sendReqToMemory(const SimPacket* _pkt) {
-	if (this->m_port_->isPushReady()) {
+void MEMStage::sendReqToMemory(MemReqPacket* _pkt) {
+	auto m_port = dynamic_cast<CPU*>(this->getSimulator())->getMasterPort();
+	if (m_port->isPushReady()) {
 		// Set the status to WAIT
 		this->setStatus(mem_stage_status::WAIT);
 		// Send the packet to Data Memory
-		this->m_port_->push(_pkt);
+		m_port->push(_pkt);
 	} else {
 		CLASS_ERROR << "[MEMStage] Failed to push the MemReqPacket into MasterPort";
 	}

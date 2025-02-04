@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-#include "MemReqPacket.hh"
+#include "packet/MemReqPacket.hh"
 
-void MemReqPacket::visit(Tick _when, SimModule& _module) {
+#include "DataMemory.hh"
+
+void MemReqPacket::visit(acalsim::Tick _when, acalsim::SimModule& _module) {
 	CLASS_ERROR << "void MemReqPacket::visit(SimModule& _module)is not implemented yet!";
 }
 
-void MemReqPacket::visit(Tick _when, SimBase& _simulator) {
-	if (auto mem = dynamic_cast<DataMEmory*>(&_simulator)) {
-		mem->processReqPkt(this->addr, this->data, this->type);
+void MemReqPacket::visit(acalsim::Tick _when, acalsim::SimBase& _simulator) {
+	if (auto mem = dynamic_cast<DataMemory*>(&_simulator)) {
+		// mem->processReqPkt(this->addr, this->data, this->type);
+		mem->processReqPkt();
 	} else {
 		CLASS_ERROR << "Invalid module type for MemRespPacket";
 	}

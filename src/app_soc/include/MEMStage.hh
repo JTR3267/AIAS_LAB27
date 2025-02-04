@@ -21,8 +21,9 @@
 
 #include "ACALSim.hh"
 #include "CPUDefs.hh"
-#include "MemRespPacket.hh"
 #include "Register.hh"
+#include "packet/MemReqPacket.hh"
+#include "packet/MemRespPacket.hh"
 
 /**
  * @brief A class representing a component template.
@@ -38,9 +39,7 @@ public:
 	 *
 	 * @param name The name of the component.
 	 */
-	MEMStage(const std::string& _name, const Register<mem_stage_info>* _exe_mem_reg,
-	         const Register<wb_stage_info>* _mem_wb_reg)
-	    : acalsim::SimModule(_name), exe_mem_reg(_exe_mem_reg), mem_wb_reg(_mem_wb_reg){};
+	MEMStage(const std::string& _name, Register<exe_stage_out>* _exe_mem_reg, Register<mem_stage_out>* _mem_wb_reg);
 
 	~MEMStage();
 
@@ -63,22 +62,19 @@ public:
 	 */
 	void execDataPath();
 
-	void setRespPkt(MemRespPkt* _resp_pkt) { this->resp_pkt = _resp_pkt; }
-
 	void processRespPkt(const uint32_t& _data);
 
 	void setStatus(mem_stage_status _status) { this->status = _status; }
 
-	void checkMemoryAccess(const mem_stage_info* _info);
+	void checkMemoryAccess(std::shared_ptr<exe_stage_out> _info);
 
 	bool checkDataHazard(int _rs1, int _rs2);
 
-	void sendReqToMemory(const SimPacket* _pkt);
+	void sendReqToMemory(MemReqPacket* _pkt);
 
 private:
 	Register<exe_stage_out>* exe_mem_reg;
 	Register<mem_stage_out>* mem_wb_reg;
-	MemRespPkt*              resp_pkt;
 	mem_stage_status         status = mem_stage_status::IDLE;
 };
 

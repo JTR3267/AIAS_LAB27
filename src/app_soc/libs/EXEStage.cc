@@ -69,7 +69,7 @@ void EXEStage::execDataPath() {
 				break;
 		}
 		std::shared_ptr<exe_stage_out> infoPtr = std::make_shared<exe_stage_out>(exe_stage_out{
-		    .inst = id_stage_out->inst, .pc = id_stage_out->pc, .alu_out = alu_out_, .write_data = write_data_});
+		    .pc = id_stage_out->pc, .inst = id_stage_out->inst, .alu_out = alu_out_, .write_data = write_data_});
 		this->exe_mem_reg->set(infoPtr);
 	}
 	this->stall = false;

@@ -35,8 +35,7 @@ public:
 	 *
 	 * @param name The name of the component.
 	 */
-	WBStage(const std::string& name, const Register<wb_stage_info>* _mem_wb_reg)
-	    : acalsim::SimModule(name), mem_wb_reg(_mem_wb_reg){};
+	WBStage(const std::string& name, Register<mem_stage_out>* _mem_wb_reg);
 
 	~WBStage();
 

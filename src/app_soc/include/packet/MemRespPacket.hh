@@ -26,11 +26,11 @@ public:
 	MemRespPacket(const std::string& _name) {}
 	~MemRespPacket() {}
 
-	void visit(Tick _when, SimModule& _module) override;
-	void visit(Tick _when, SimBase& _simulator) override;
+	void visit(acalsim::Tick _when, acalsim::SimModule& _module) override;
+	void visit(acalsim::Tick _when, acalsim::SimBase& _simulator) override;
 
 private:
 	uint32_t data;
-}
+};
 
 #endif  // SRC_APP_SOC_INCLUDE_MEMRESPPACKET_HH_

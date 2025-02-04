@@ -16,29 +16,39 @@
 
 #include "WBStage.hh"
 
-WBStage::WBStage(const std::string& name) : acalsim::SimModule(name) {}
+#include "IDStage.hh"
+#include "IFStage.hh"
 
-WBStage::~WBStage() {}
+WBStage::WBStage(const std::string& name, Register<mem_stage_out>* _mem_wb_reg)
+    : acalsim::SimModule(name), mem_wb_reg(_mem_wb_reg){};
+
+WBStage::~WBStage(){};
 
 void WBStage::init() { CLASS_INFO << "WBStage Initialization"; }
 
 void WBStage::step() {}
 
 void WBStage::execDataPath() {
+	auto info = this->mem_wb_reg->get();
 	// Check for data hazard
 	if (this->checkDataHazard(info->inst.a2.reg, info->inst.a3.reg)) {
-		dynamic_cast<SimModule*>(this->getSimulator()->getModule("IFStage"))->setStall();
-		dynamic_cast<SimModule*>(this->getSimulator()->getModule("IDStage"))->setStall();
+		dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
+		dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
 	}
 	// Write back to the register file
-	auto info      = this->mem_wb_reg->get();
-	auto inst_type = inst.inst_type;
+	auto inst_type = info->inst.op;
 	switch (inst_type) {
-		case instr_type::LW: this->getSimulator()->writeRegister(info->inst.rd, info->mem_val.load_data); break;
-		case instr_type::JAL: this->getSimulator()->writeRegister(info->inst.rd, info->mem_val.pc_plus_4_to_rd); break;
+		case instr_type::LW:
+			dynamic_cast<CPU*>(this->getSimulator())->writeRegister(info->inst.a1.reg, info->mem_val.load_data);
+			break;
+		case instr_type::JAL:
+			dynamic_cast<CPU*>(this->getSimulator())->writeRegister(info->inst.a1.reg, info->mem_val.pc_plus_4_to_rd);
+			break;
 		case instr_type::ADD:
 		case instr_type::ADDI:
-		case instr_type::LUI: this->getSimulator()->writeRegister(info->inst.rd, info->mem_val.alu_out); break;
+		case instr_type::LUI:
+			dynamic_cast<CPU*>(this->getSimulator())->writeRegister(info->inst.a1.reg, info->mem_val.alu_out);
+			break;
 		case instr_type::SB:
 		case instr_type::BEQ: break;
 		default: CLASS_ERROR << "Invalid instruction type"; break;
@@ -47,9 +57,9 @@ void WBStage::execDataPath() {
 
 bool WBStage::checkDataHazard(int _rs1, int _rs2) {
 	// Get rs1 and rs2 from the ID stage inbound register
-	auto id_reg = this->getSimulator()->if_->getRegFromID();
-	auto rd     = id_reg->get()->inst.a1.reg;
+	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
+	auto rd     = id_reg->inst.a1.reg;
 	return (rd == _rs1 || rd == _rs2);
 }
 
-bool WBStage::checkHcf() { return (this->mem_wb_reg->get()->inst.inst_type == instr_type::HCF); }
+bool WBStage::checkHcf() { return (this->mem_wb_reg->get()->inst.op == instr_type::HCF); }

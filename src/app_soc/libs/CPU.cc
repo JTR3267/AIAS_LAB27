@@ -24,7 +24,7 @@
 #include "Register.hh"
 #include "WBStage.hh"
 
-CPU::CPU(const std::string& name) : acalsim::CPPSimBase(name) {
+CPU::CPU(const std::string& _name, const std::string& _m_port, const std::string& _s_port) : acalsim::CPPSimBase(name) {
 	this->imem = new InstMemory();
 	for (int i = 0; i < 32; i++) { this->regs[i] = new Register<uint32_t>(std::make_shared<uint32_t>(0)); }
 
@@ -34,8 +34,9 @@ CPU::CPU(const std::string& name) : acalsim::CPPSimBase(name) {
 	this->mem_wb_reg  = new Register<mem_stage_out>();
 
 	// Generate and Register MasterPorts
-
+	this->m_port_ = this->addMasterPort(_m_port);
 	// Generate and Register SlavePorts
+	this->s_port_ = this->addSlavePort(_s_port, 1);
 }
 
 CPU::~CPU() {}
@@ -63,8 +64,8 @@ void CPU::registerModules() {
 	auto IFStage_mod  = new IFStage("IFStage", this->if_id_reg);
 	auto IDStage_mod  = new IDStage("IDStage", this->if_id_reg, this->id_exe_reg);
 	auto EXEStage_mod = new EXEStage("EXEStage", this->id_exe_reg, this->exe_mem_reg);
-	auto MEMStage_mod = new MEMStage("MEMStage");
-	auto WBStage_mod  = new WBStage("WBStage");
+	auto MEMStage_mod = new MEMStage("MEMStage", this->exe_mem_reg, this->mem_wb_reg);
+	auto WBStage_mod  = new WBStage("WBStage", this->mem_wb_reg);
 
 	this->addModule(IFStage_mod);
 	this->addModule(IDStage_mod);
@@ -79,6 +80,7 @@ void CPU::execDataPath() {
 	dynamic_cast<IDStage*>(this->getModule("IDStage"))->execDataPath();
 	dynamic_cast<IFStage*>(this->getModule("IFStage"))->execDataPath();
 }
+
 void CPU::updatePipeRegisters() {
 	this->if_id_reg->update();
 	this->id_exe_reg->update();
