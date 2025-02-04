@@ -1,5 +1,20 @@
-#include "InstMemory.hh"
+/*
+ * Copyright 2023-2024 Playlab/ACAL
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+#include "InstMemory.hh"
 
 bool InstMemory::streq(char* s, const char* q) {
 	if (strcmp(s, q) == 0) return true;
@@ -12,7 +27,9 @@ uint32_t InstMemory::signextend(uint32_t in, int bits) {
 	return in;
 }
 
-void InstMemory::print_syntax_error(int line, const char* msg) { ERROR << "Line " << line << ": Syntax error! " << msg; }
+void InstMemory::print_syntax_error(int line, const char* msg) {
+	ERROR << "Line " << line << ": Syntax error! " << msg;
+}
 
 void InstMemory::append_source(const char* op, const char* a1, const char* a2, const char* a3, instr* i) {
 	char tbuf[128];  // not safe... static size... but should be okay since label length enforced
@@ -142,8 +159,7 @@ void InstMemory::parse_assembler_directive(int line, char* ftok, uint8_t* mem) {
 	}
 }
 
-int InstMemory::parse_pseudoinstructions(int line, char* ftok, int ioff, char* o1, char* o2,
-                                     char* o3, char* o4) {
+int InstMemory::parse_pseudoinstructions(int line, char* ftok, int ioff, char* o1, char* o2, char* o3, char* o4) {
 	if (streq(ftok, "li")) {
 		if (!o1 || !o2 || o3) print_syntax_error(line, "Invalid format");
 
@@ -492,9 +508,7 @@ void InstMemory::parse(const std::string& file_path, uint8_t* mem) {
 				printf("Exceeded maximum length of label: %s\n", ftok);
 				exit(3);
 			}
-			if (this->label_count >= MAX_LABEL_COUNT) {
-				ERROR << "Exceeded maximum number of supported labels";
-			}
+			if (this->label_count >= MAX_LABEL_COUNT) { ERROR << "Exceeded maximum number of supported labels"; }
 			strncpy(this->labels[this->label_count].label, ftok, MAX_LABEL_LEN);
 			this->labels[this->label_count].loc = this->memoff;
 			this->label_count++;
