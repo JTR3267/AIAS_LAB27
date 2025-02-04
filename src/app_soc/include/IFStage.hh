@@ -20,6 +20,7 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "CPUDefs.hh"
 #include "Register.hh"
 
 /**
@@ -34,7 +35,7 @@ public:
 	 *
 	 * @param name The name of the component.
 	 */
-	IFStage(const std::string& name);
+	IFStage(const std::string& name, Register<if_stage_out>* _if_id_reg);
 
 	~IFStage();
 
@@ -51,8 +52,19 @@ public:
 	 */
 	void step() override;
 
+	void execDataPath();
+
+	bool getStallStatus() { return this->stall; }
+
+	void updatePC() { this->pc_reg->update(); }
+
 private:
-	Register<int>* if_id_reg;
+	Register<if_stage_out>*   if_id_reg;
+	Register<uint32_t>*       pc_reg;
+	uint32_t                  current_pc;
+	std::pair<bool, uint32_t> exe_next_pc;
+	bool                      flush;
+	bool                      stall;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_IFSTAGE_HH_

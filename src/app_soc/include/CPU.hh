@@ -28,6 +28,7 @@
 #include "ACALSim.hh"
 #include "DataMemory.hh"
 #include "InstMemory.hh"
+#include "Register.hh"
 
 /**
  * @brief A class representing a simulator template.
@@ -67,8 +68,29 @@ public:
 	 */
 	void cleanup() override;
 
+	void execDataPath();
+	void updateSystemStates();
+	void updatePipeRegisters();
+	void updateRegisterFile();
+	void updatePC();
+	void checkNextCycleEvent();
+
+	void printRegfile();
+
+	const instr& fetchInstr(int index) { return this->imem->fetchInstr(index); }
+
+	const uint32_t& readRegister(int index) {
+		CLASS_ASSERT(index >= 0 && index < 32);
+		return *(this->regs[index]->get());
+	}
+
 private:
-	InstMemory* imem;
+	InstMemory*              imem;
+	Register<uint32_t>*      regs[32];
+	Register<if_stage_out>*  if_id_reg;
+	Register<id_stage_out>*  id_exe_reg;
+	Register<exe_stage_out>* exe_mem_reg;
+	Register<mem_stage_out>* mem_wb_reg;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_CPU_HH_

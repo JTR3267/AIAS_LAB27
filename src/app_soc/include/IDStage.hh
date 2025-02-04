@@ -20,6 +20,9 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "CPU.hh"
+#include "CPUDefs.hh"
+#include "Register.hh"
 
 /**
  * @brief A class representing a component template.
@@ -33,7 +36,7 @@ public:
 	 *
 	 * @param name The name of the component.
 	 */
-	IDStage(const std::string& name);
+	IDStage(const std::string& name, Register<if_stage_out>* _if_id_reg, Register<id_stage_out>* _id_exe_reg);
 
 	~IDStage();
 
@@ -49,6 +52,16 @@ public:
 	 * @note Design what the component can do or print out some information here each iteration.
 	 */
 	void step() override;
+
+	void execDataPath();
+
+	bool getStallStatus() { return this->stall; }
+
+private:
+	Register<if_stage_out>* if_id_reg;
+	Register<id_stage_out>* id_exe_reg;
+	bool                    flush;
+	bool                    stall;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_IDSTAGE_HH_

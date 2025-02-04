@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef SRC_APP_SOC_INCLUDE_DATASTRUCT_HH_
-#define SRC_APP_SOC_INCLUDE_DATASTRUCT_HH_
+#ifndef SRC_APP_SOC_INCLUDE_CPUDEFS_HH_
+#define SRC_APP_SOC_INCLUDE_CPUDEFS_HH_
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -109,5 +109,34 @@ typedef struct {
 	char label[MAX_LABEL_LEN];
 	int  loc = -1;
 } label_loc;
+
+typedef struct {
+	uint32_t pc;
+	instr    inst;
+} if_stage_out;
+
+typedef struct {
+	uint32_t pc;
+	instr    inst;
+	uint32_t rs1_data;
+	uint32_t rs2_data;
+	uint32_t immediate;
+} id_stage_out;
+
+typedef struct {
+	instr    inst;
+	uint32_t pc;
+	uint32_t alu_out;  // computation result or address for load/store
+	uint32_t write_data;
+} exe_stage_out;
+
+typedef struct {
+	instr    inst;
+	uint32_t pc_plus_4_to_rd;
+	union {
+		uint32_t alu_out;
+		uint32_t load_data;
+	} mem_val;
+} mem_stage_out;
 
 #endif

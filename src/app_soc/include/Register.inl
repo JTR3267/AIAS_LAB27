@@ -21,6 +21,10 @@ Register<T>::Register()
     : state_(OutEntry::PING), is_stall_(false), is_flush_(false), ping_entry_(nullptr), pong_entry_(nullptr) {}
 
 template <typename T>
+Register<T>::Register(const std::shared_ptr<T>& val)
+    : state_(OutEntry::PING), is_stall_(false), is_flush_(false), ping_entry_(val), pong_entry_(val) {}
+
+template <typename T>
 std::shared_ptr<T> Register<T>::get() const {
 	return (this->state_ == OutEntry::PING) ? this->ping_entry_ : this->pong_entry_;
 }

@@ -14,35 +14,30 @@
  * limitations under the License.
  */
 
-#ifndef SRC_APP_SOC_INCLUDE_REGISTER_HH_
-#define SRC_APP_SOC_INCLUDE_REGISTER_HH_
+#ifndef SRC_APP_SOC_INCLUDE_CPU_SINGLE_ITERATION_EVENT_HH_
+#define SRC_APP_SOC_INCLUDE_CPU_SINGLE_ITERATION_EVENT_HH_
 
-#include <memory>
+#include "ACALSim.hh"
+using namespace acalsim;
 
-template <typename T>
-class Register {
+#include "CPU.hh"
+
+class CPUSingleIterationEvent : public SimEvent {
 public:
-	Register();
-	Register(const std::shared_ptr<T>& val);
+	CPUSingleIterationEvent(SimBase* _sim, instr& _instr)
+	    : SimEvent("CPUSingleIterationEvent"), sim(_sim) {
+		this->clearFlags(Managed);
+	}
+	~CPUSingleIterationEvent() {}
+	CPUSingleIterationEvent() {}
 
-	std::shared_ptr<T> get() const;
-
-	void set(const std::shared_ptr<T>& val);
-
-	void setStall();
-	void setFlush();
-	void update();
+	void renew(SimBase* _sim) {
+		this->sim  = _sim;
+	}
+	void process() override;
 
 private:
-	enum class OutEntry { PING, PONG };
-
-	OutEntry           state_;
-	bool               is_stall_;
-	bool               is_flush_;
-	std::shared_ptr<T> ping_entry_;
-	std::shared_ptr<T> pong_entry_;
+	SimBase* sim;
 };
 
-#include "Register.inl"
-
-#endif  // SRC_APP_SOC_INCLUDE_REGISTER_HH_
+#endif

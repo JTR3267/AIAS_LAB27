@@ -20,6 +20,8 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "CPUDefs.hh"
+#include "Register.hh"
 
 /**
  * @brief A class representing a component template.
@@ -33,7 +35,7 @@ public:
 	 *
 	 * @param name The name of the component.
 	 */
-	EXEStage(const std::string& name);
+	EXEStage(const std::string& name, Register<id_stage_out>* _id_exe_reg, Register<exe_stage_out>* _exe_mem_reg);
 
 	~EXEStage();
 
@@ -49,6 +51,15 @@ public:
 	 * @note Design what the component can do or print out some information here each iteration.
 	 */
 	void step() override;
+
+	void execDataPath();
+
+	bool getStallStatus() { return this->stall; }
+
+private:
+	Register<id_stage_out>*  id_exe_reg;
+	Register<exe_stage_out>* exe_mem_reg;
+	bool                     stall;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_EXESTAGE_HH_

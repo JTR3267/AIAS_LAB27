@@ -16,10 +16,32 @@
 
 #include "IFStage.hh"
 
-IFStage::IFStage(const std::string& name) : acalsim::SimModule(name) { this->if_id_reg = new Register<int>(); }
+#include "CPU.hh"
+
+IFStage::IFStage(const std::string& name, Register<if_stage_out>* _if_id_reg)
+    : acalsim::SimModule(name), if_id_reg(_if_id_reg), flush(false), stall(false), exe_next_pc{false, 0} {
+	this->pc_reg = new Register<uint32_t>(std::make_shared<uint32_t>(0));
+}
 
 IFStage::~IFStage() {}
 
 void IFStage::init() { CLASS_INFO << "IFStage Initialization"; }
 
 void IFStage::step() {}
+
+void IFStage::execDataPath() {
+	int index = *(this->pc_reg->get()) / 4;
+	if (!this->flush && !this->stall) {
+		const instr& fetch_instr = dynamic_cast<CPU*>(this->getSimulator())->fetchInstr(index);
+
+		std::shared_ptr<if_stage_out> infoPtr =
+		    std::make_shared<if_stage_out>(if_stage_out{.pc = current_pc, .inst = fetch_instr});
+
+		this->if_id_reg->set(infoPtr);
+	}
+	if (this->exe_next_pc.first) {
+		this->pc_reg->set(std::make_shared<uint32_t>(this->exe_next_pc.second));
+	} else {
+		this->pc_reg->set(std::make_shared<uint32_t>(this->current_pc + 4));
+	}
+}
