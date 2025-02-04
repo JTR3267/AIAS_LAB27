@@ -14,12 +14,34 @@
  * limitations under the License.
  */
 
-#include "IDStage.hh"
+#ifndef SRC_APP_SOC_INCLUDE_REGISTER_HH_
+#define SRC_APP_SOC_INCLUDE_REGISTER_HH_
 
-IDStage::IDStage(const std::string& name) : acalsim::SimModule(name) {}
+#include <memory>
 
-IDStage::~IDStage() {}
+template <typename T>
+class Register {
+public:
+	Register();
 
-void IDStage::init() { CLASS_INFO << "IDStage Initialization"; }
+	std::shared_ptr<T> get() const;
 
-void IDStage::step() {}
+	void set(const std::shared_ptr<T>& val);
+
+	void setStall();
+	void setFlush();
+	void update();
+
+private:
+	enum class OutEntry { PING, PONG };
+
+	OutEntry           state_;
+	bool               is_stall_;
+	bool               is_flush_;
+	std::shared_ptr<T> ping_entry_;
+	std::shared_ptr<T> pong_entry_;
+};
+
+#include "Register.inl"
+
+#endif  // SRC_APP_SOC_INCLUDE_REGISTER_HH_

@@ -1,26 +1,21 @@
-/* --------------------------------------------------------------------------------------
- *  A template to demonstrate how to create your own simulation using ACALSim framework
- *  Step 1. Inherit SimBase to create your own simulator classes
+/*
+ * Copyright 2023-2024 Playlab/ACAL
  *
- *  Step 2. Inherit SimTop to create your own top-level simulation class
- * 			1) (optional) SimTop::registerConfigs(); // register SimConfig into ACALSim.
- *			2) (optional) SimTop::registerCLIArguments(); // update Parameter via CLI Option
- *          3) (required) SimTop::registerSimulators(); // Add all the simulators one by one
-
- *  Step 3. instantiate a top-level simulation instance and call the following APIs in turn
- *          1) SimTop::init(); //Pre-Simulation Initialization
- *          2) SimTop::run();  //Simulation main loop
- *          3) SimTop::finish(); // Post-Simulation cleanup
- * --------------------------------------------------------------------------------------*/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef SRC_APP_SOC_INCLUDE_SOCSIMTOP_HH_
 #define SRC_APP_SOC_INCLUDE_SOCSIMTOP_HH_
-
-/* --------------------------------------------------------------------------------------
- *  A template header file to demonstrate how to create a user-defined libraries.
- *  Feel free to modify, delete, or add any declarations and header file inside `include` folder.
- *  Ensure proper inclusion of header files in your source code.
- * --------------------------------------------------------------------------------------*/
 
 #include <string>
 
@@ -82,10 +77,6 @@ public:
 	void postSimInitSetup() override;
 
 	void registerConfigs() override;
-
-private:
-	uint8_t*    dmem;
-	InstMemory* imem;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_SOCSIMTOP_HH_
