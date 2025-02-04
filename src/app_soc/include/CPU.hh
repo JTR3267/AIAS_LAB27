@@ -27,7 +27,12 @@
 
 #include "ACALSim.hh"
 #include "DataMemory.hh"
+#include "EXEStage.hh"
+#include "IDStage.hh"
+#include "IFStage.hh"
 #include "InstMemory.hh"
+#include "MEMStage.hh"
+#include "WBStage.hh"
 
 /**
  * @brief A class representing a simulator template.
@@ -41,7 +46,11 @@ public:
 	 *
 	 * @param name The name of the simulator.
 	 */
-	CPU(const std::string& name);
+	CPU(const std::string& _name, const std::string& _m_port, const std::string& _s_port) : acalsim::CPPSimBase(_name) {
+		this->imem    = new InstMemory();
+		this->m_port_ = this->addMasterPort(_m_port);
+		this->s_port_ = this->addSlavePort(_s_port, 1);
+	}
 
 	~CPU();
 
@@ -67,8 +76,17 @@ public:
 	 */
 	void cleanup() override;
 
+	void writeRegister(int _index, uint32_t _data) {}
+
 private:
-	InstMemory* imem;
+	InstMemory*          imem;
+	acalsim::MasterPort* m_port_;
+	acalsim::SlavePort*  s_port_;
+	IFStage*             if_;
+	IDStage*             id_;
+	EXEStage*            exe_;
+	MEMStage*            mem_;
+	WBStage*             wb_;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_CPU_HH_

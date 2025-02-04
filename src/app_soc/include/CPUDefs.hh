@@ -110,4 +110,33 @@ typedef struct {
 	int  loc = -1;
 } label_loc;
 
+typedef struct {
+	instr    inst;
+	uint32_t pc;
+} if_stage_out;
+
+typedef struct {
+	instr    inst;
+	uint32_t pc;
+	uint32_t rs1_data;
+	uint32_t rs2_data;
+	uint32_t immediate;
+} id_stage_out;
+
+typedef struct {
+	instr    inst;
+	uint32_t pc;
+	uint32_t alu_out;  // computation result or address for load/store
+	uint32_t write_data;
+} exe_stage_out;
+
+typedef struct {
+	instr inst;
+	union {
+		uint32_t pc_plus_4_to_rd;
+		uint32_t alu_out;
+		uint32_t load_data;
+	} mem_val;
+} mem_stage_out;
+
 #endif

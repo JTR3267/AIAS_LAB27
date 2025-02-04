@@ -20,6 +20,7 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "CPUDefs.hh"
 #include "Register.hh"
 
 /**
@@ -51,8 +52,10 @@ public:
 	 */
 	void step() override;
 
+	void setStall() { this->if_id_reg->setStall(); }
+
 private:
-	Register<int>* if_id_reg;
+	Register<if_stage_out>* if_id_reg;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_IFSTAGE_HH_

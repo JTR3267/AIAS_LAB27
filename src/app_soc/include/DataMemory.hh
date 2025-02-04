@@ -40,7 +40,11 @@ public:
 	 *
 	 * @param name The name of the simulator.
 	 */
-	DataMemory(const std::string& name, size_t _size);
+	DataMemory(const std::string& name, size_t _size, const std::string& _m_port, const std::string& _s_port)
+	    : acalsim::CPPSimBase(name), BaseMemory(_size) {
+		this->m_port_ = this->addMasterPort(_m_port);
+		this->s_port_ = this->addSlavePort(_s_port, 1);
+	}
 
 	~DataMemory();
 
@@ -65,6 +69,10 @@ public:
 	 * @note Release dynamic memory, clean up the event queue, etc., in this function.
 	 */
 	void cleanup() override;
+
+private:
+	acalsim::MasterPort* m_port_;
+	acalsim::SlavePort*  s_port_;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_DATAMEMORY_HH_

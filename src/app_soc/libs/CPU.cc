@@ -16,10 +16,12 @@
 
 #include "CPU.hh"
 
+#include "CPUDefs.hh"
 #include "EXEStage.hh"
 #include "IDStage.hh"
 #include "IFStage.hh"
 #include "MEMStage.hh"
+#include "Register.hh"
 #include "WBStage.hh"
 
 CPU::CPU(const std::string& name) : acalsim::CPPSimBase(name) {
@@ -45,22 +47,31 @@ void CPU::init() {
 }
 
 void CPU::registerModules() {
-	// Generate and Register Modules
-	auto IFStage_mod  = new IFStage("IFStage");
-	auto IDStage_mod  = new IDStage("IDStage");
-	auto EXEStage_mod = new EXEStage("EXEStage");
-	auto MEMStage_mod = new MEMStage("MEMStage");
-	auto WBStage_mod  = new WBStage("WBStage");
+	// Create Register between stages
+	auto exe_mem_reg = new<Register<exe_stage_out>>();
+	auto mem_wb_reg  = new<Register<mem_stage_out>>();
 
-	this->addModule(IFStage_mod);
-	this->addModule(IDStage_mod);
-	this->addModule(EXEStage_mod);
-	this->addModule(MEMStage_mod);
-	this->addModule(WBStage_mod);
+	// Generate and Register Modules
+	this->if_  = new IFStage("IFStage");
+	this->id_  = new IDStage("IDStage");
+	this->exe_ = new EXEStage("EXEStage");
+	this->mem_ = new MEMStage("MEMStage", exe_mem_reg, mem_wb_reg);
+	this->wb_  = new WBStage("WBStage", mem_wb_reg);
+
+	this->addModule(if_);
+	this->addModule(id_);
+	this->addModule(exe_);
+	this->addModule(mem_);
+	this->addModule(wb_);
 
 	// Connect SimPort
 }
 
-void CPU::step() {}
+void CPU::step() {
+	if (this->s_port_->isPopValid()) {
+		auto packet = this->s_port_->pop();
+		this->accept(acalsim::top->getGlobalTick(), *packet);
+	}
+}
 
 void CPU::cleanup() {}

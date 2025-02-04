@@ -38,10 +38,15 @@ void SOCSimTop::control_thread_step() {}
 
 void SOCSimTop::registerSimulators() {
 	int memory_size = acalsim::top->getParameter<int>("SOC", "memory_size");
+	// SimPort Name
+	std::string CPU_sim_m        = "CPU_sim-m";
+	std::string CPU_sim_s        = "CPU_sim-s";
+	std::string DataMemory_sim_m = "DataMemory_sim-m";
+	std::string DataMemory_sim_s = "DataMemory_sim-s";
 
 	// Generate and Register Simulator
-	auto CPU_sim        = new CPU("CPU");
-	auto DataMemory_sim = new DataMemory("DataMemory", memory_size);
+	auto CPU_sim        = new CPU("CPU", CPU_sim_m, CPU_sim_s);
+	auto DataMemory_sim = new DataMemory("DataMemory", memory_size, DataMemory_sim_m, DataMemory_sim_s);
 
 	this->addSimulator(CPU_sim);
 	this->addSimulator(DataMemory_sim);
@@ -50,6 +55,8 @@ void SOCSimTop::registerSimulators() {
 	DataMemory_sim->addUpStream(CPU_sim, "USCPU");
 
 	// Connect SimPort
+	acalsim::SimPortManager::ConnectPort(CPU_sim, DataMemory_sim, CPU_sim_m, DataMemory_sim_s);
+	acalsim::SimPortManager::ConnectPort(DataMemory_sim, CPU_sim, DataMemory_sim_m, CPU_sim_s);
 
 	// Connect SimChannel
 }

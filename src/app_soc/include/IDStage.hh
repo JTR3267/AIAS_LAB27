@@ -20,6 +20,8 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "CPUDefs.hh"
+#include "Register.hh"
 
 /**
  * @brief A class representing a component template.
@@ -49,6 +51,14 @@ public:
 	 * @note Design what the component can do or print out some information here each iteration.
 	 */
 	void step() override;
+
+	if_stage_out* getRegInfoFromID() { return this->if_id_reg->get(); }
+
+	void setStall() { this->id_exe_reg->setStall(); }
+
+private:
+	Register<if_stage_out>* if_id_reg;
+	Register<id_stage_out>* id_exe_reg;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_IDSTAGE_HH_

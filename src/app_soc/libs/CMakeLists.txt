@@ -16,7 +16,11 @@ set(APP_PREFIX_LIB_NAME ${PROJECT_NAME}_${APP_LIB_NAME})
 # ##########################################################################
 # # Build Source Files
 # ##########################################################################
-file(GLOB_RECURSE LIBS_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
+file(
+    GLOB_RECURSE LIBS_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/packet/*.cc
+)
 
 # ##########################################################################
 # # Build rules : Function to configure target properties and dependencies
