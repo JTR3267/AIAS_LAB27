@@ -20,6 +20,8 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "CPUDefs.hh"
+#include "Register.hh"
 
 /**
  * @brief A class representing a component template.
@@ -33,7 +35,8 @@ public:
 	 *
 	 * @param name The name of the component.
 	 */
-	WBStage(const std::string& name);
+	WBStage(const std::string& name, const Register<wb_stage_info>* _mem_wb_reg)
+	    : acalsim::SimModule(name), mem_wb_reg(_mem_wb_reg){};
 
 	~WBStage();
 
@@ -49,6 +52,15 @@ public:
 	 * @note Design what the component can do or print out some information here each iteration.
 	 */
 	void step() override;
+
+	void execDataPath();
+
+	bool checkDataHazard(int _rs1, int _rs2);
+
+	bool checkHcf();
+
+private:
+	Register<mem_stage_out>* mem_wb_reg;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_WBSTAGE_HH_

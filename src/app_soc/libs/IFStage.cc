@@ -44,4 +44,6 @@ void IFStage::execDataPath() {
 	} else {
 		this->pc_reg->set(std::make_shared<uint32_t>(this->current_pc + 4));
 	}
+	this->stall = false;
+	this->flush = false;
 }

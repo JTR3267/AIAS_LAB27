@@ -20,6 +20,9 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "CPUDefs.hh"
+#include "MemRespPacket.hh"
+#include "Register.hh"
 
 /**
  * @brief A class representing a component template.
@@ -28,12 +31,16 @@
  */
 class MEMStage : public acalsim::SimModule {
 public:
+	enum class mem_stage_status { WAIT, IDLE };
+
 	/**
 	 * @brief Constructor for the Template class.
 	 *
 	 * @param name The name of the component.
 	 */
-	MEMStage(const std::string& name);
+	MEMStage(const std::string& _name, const Register<mem_stage_info>* _exe_mem_reg,
+	         const Register<wb_stage_info>* _mem_wb_reg)
+	    : acalsim::SimModule(_name), exe_mem_reg(_exe_mem_reg), mem_wb_reg(_mem_wb_reg){};
 
 	~MEMStage();
 
@@ -49,6 +56,30 @@ public:
 	 * @note Design what the component can do or print out some information here each iteration.
 	 */
 	void step() override;
+
+	/**
+	 * Update the outbound results according to the inbound register
+	 * of each stage itself.
+	 */
+	void execDataPath();
+
+	void setRespPkt(MemRespPkt* _resp_pkt) { this->resp_pkt = _resp_pkt; }
+
+	void processRespPkt(const uint32_t& _data);
+
+	void setStatus(mem_stage_status _status) { this->status = _status; }
+
+	void checkMemoryAccess(const mem_stage_info* _info);
+
+	bool checkDataHazard(int _rs1, int _rs2);
+
+	void sendReqToMemory(const SimPacket* _pkt);
+
+private:
+	Register<exe_stage_out>* exe_mem_reg;
+	Register<mem_stage_out>* mem_wb_reg;
+	MemRespPkt*              resp_pkt;
+	mem_stage_status         status = mem_stage_status::IDLE;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_MEMSTAGE_HH_

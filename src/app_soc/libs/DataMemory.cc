@@ -35,6 +35,11 @@ void DataMemory::registerModules() {
 	// Connect SimPort
 }
 
-void DataMemory::step() {}
+void DataMemory::step() {
+	if (this->s_port_->isPopValid()) {
+		auto packet = this->s_port_->pop();
+		this->accept(acalsim::top->getGlobalTick(), *packet);
+	}
+}
 
 void DataMemory::cleanup() {}

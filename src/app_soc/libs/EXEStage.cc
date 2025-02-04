@@ -72,4 +72,5 @@ void EXEStage::execDataPath() {
 		    .inst = id_stage_out->inst, .pc = id_stage_out->pc, .alu_out = alu_out_, .write_data = write_data_});
 		this->exe_mem_reg->set(infoPtr);
 	}
+	this->stall = false;
 }

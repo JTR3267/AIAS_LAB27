@@ -130,6 +130,11 @@ void CPU::updateSystemStates() {
 	this->updateRegisterFile();
 }
 
-void CPU::step() {}
+void CPU::step() {
+	if (this->s_port_->isPopValid()) {
+		auto packet = this->s_port_->pop();
+		this->accept(acalsim::top->getGlobalTick(), *packet);
+	}
+}
 
 void CPU::cleanup() {}

@@ -26,6 +26,7 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "CPUDefs.hh"
 #include "DataMemory.hh"
 #include "InstMemory.hh"
 #include "Register.hh"
@@ -42,7 +43,11 @@ public:
 	 *
 	 * @param name The name of the simulator.
 	 */
-	CPU(const std::string& name);
+	CPU(const std::string& _name, const std::string& _m_port, const std::string& _s_port) : acalsim::CPPSimBase(_name) {
+		this->imem    = new InstMemory();
+		this->m_port_ = this->addMasterPort(_m_port);
+		this->s_port_ = this->addSlavePort(_s_port, 1);
+	}
 
 	~CPU();
 
@@ -86,6 +91,8 @@ public:
 
 private:
 	InstMemory*              imem;
+	acalsim::MasterPort*     m_port_;
+	acalsim::SlavePort*      s_port_;
 	Register<uint32_t>*      regs[32];
 	Register<if_stage_out>*  if_id_reg;
 	Register<id_stage_out>*  id_exe_reg;

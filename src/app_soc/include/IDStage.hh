@@ -57,6 +57,13 @@ public:
 
 	bool getStallStatus() { return this->stall; }
 
+	if_stage_out* getRegInfoFromID() { return this->if_id_reg->get(); }
+
+	void setStall() {
+		this->id_exe_reg->setStall();
+		this->stall = true;
+	}
+
 private:
 	Register<if_stage_out>* if_id_reg;
 	Register<id_stage_out>* id_exe_reg;

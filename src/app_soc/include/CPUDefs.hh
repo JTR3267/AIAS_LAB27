@@ -124,16 +124,16 @@ typedef struct {
 } id_stage_out;
 
 typedef struct {
-	instr    inst;
 	uint32_t pc;
+	instr    inst;
 	uint32_t alu_out;  // computation result or address for load/store
 	uint32_t write_data;
 } exe_stage_out;
 
 typedef struct {
-	instr    inst;
-	uint32_t pc_plus_4_to_rd;
+	instr inst;
 	union {
+		uint32_t pc_plus_4_to_rd;
 		uint32_t alu_out;
 		uint32_t load_data;
 	} mem_val;

@@ -111,4 +111,6 @@ void IDStage::execDataPath() {
 			this->id_exe_reg->set(infoPtr);
 		}
 	}
+	this->stall = false;
+	this->flush = false;
 }
