@@ -24,16 +24,13 @@ using namespace acalsim;
 
 class CPUSingleIterationEvent : public SimEvent {
 public:
-	CPUSingleIterationEvent(SimBase* _sim, instr& _instr)
-	    : SimEvent("CPUSingleIterationEvent"), sim(_sim) {
+	CPUSingleIterationEvent(SimBase* _sim, instr& _instr) : SimEvent("CPUSingleIterationEvent"), sim(_sim) {
 		this->clearFlags(Managed);
 	}
 	~CPUSingleIterationEvent() {}
 	CPUSingleIterationEvent() {}
 
-	void renew(SimBase* _sim) {
-		this->sim  = _sim;
-	}
+	void renew(SimBase* _sim) { this->sim = _sim; }
 	void process() override;
 
 private:

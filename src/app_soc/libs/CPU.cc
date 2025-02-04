@@ -26,7 +26,7 @@
 
 CPU::CPU(const std::string& name) : acalsim::CPPSimBase(name) {
 	this->imem = new InstMemory();
-	for (int i = 0; i < 32; i++) { this->regs[i] = new Register<uint32_t>(); }
+	for (int i = 0; i < 32; i++) { this->regs[i] = new Register<uint32_t>(std::make_shared<uint32_t>(0)); }
 
 	this->if_id_reg   = new Register<if_stage_out>();
 	this->id_exe_reg  = new Register<id_stage_out>();

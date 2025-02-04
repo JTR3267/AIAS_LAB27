@@ -19,5 +19,5 @@
 void CPUSingleIterationEvent::process() {
 	auto cpu = dynamic_cast<CPU*>(this->sim);
 	cpu->execDataPath();
-    cpu->updateSystemStates();
+	cpu->updateSystemStates();
 }
