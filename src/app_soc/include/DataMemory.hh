@@ -27,7 +27,9 @@
 
 #include "ACALSim.hh"
 #include "BaseMemory.hh"
-
+#include "MemProcessEvent.hh"
+#include "packet/MemReqPacket.hh"
+#include "packet/MemRespPacket.hh"
 /**
  * @brief A class representing a simulator template.
  *
@@ -51,7 +53,9 @@ public:
 
 	void registerModules();
 
-	void processReqPkt();
+	void processMemoryRequest(Request& _req);
+
+	void reqPacketHandler(MemReqPacket* _pkt);
 
 	/**
 	 * @brief The step function of the simulator.

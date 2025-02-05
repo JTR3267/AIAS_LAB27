@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-#include "packet/MemReqPacket.hh"
+#include "MemProcessEvent.hh"
 
-#include "DataMemory.hh"
-
-void MemReqPacket::visit(acalsim::Tick _when, acalsim::SimModule& _module) {
-	CLASS_ERROR << "void MemReqPacket::visit(SimModule& _module)is not implemented yet!";
-}
-
-void MemReqPacket::visit(acalsim::Tick _when, acalsim::SimBase& _simulator) {
-	if (auto mem = dynamic_cast<DataMemory*>(&_simulator)) {
-		// mem->processReqPkt(this->addr, this->data, this->type);
-		mem->reqPacketHandler(this);
-	} else {
-		CLASS_ERROR << "Invalid module type for MemRespPacket";
-	}
+void MemProcessEvent::process() {
+	auto mem = dynamic_cast<DataMemory*>(this->sim);
+	mem->processMemoryRequest(this->req);
+	CLASS_INFO << "Memory finish processing in Cycle = " << acalsim::top->getGlobalTick();
 }

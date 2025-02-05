@@ -14,32 +14,29 @@
  * limitations under the License.
  */
 
-#ifndef SRC_APP_SOC_INCLUDE_MEMREQPACKET_HH_
-#define SRC_APP_SOC_INCLUDE_MEMREQPACKET_HH_
-
-#include <string>
+#ifndef SRC_APP_SOC_INCLUDE_MEMORY_PROCESS_EVENT_HH_
+#define SRC_APP_SOC_INCLUDE_MEMORY_PROCESS_EVENT_HH_
 
 #include "ACALSim.hh"
+using namespace acalsim;
 
-struct Request {
-	enum class ReqType { READ, WRITE };
-	uint32_t addr;
-	uint32_t data;
-	ReqType  type;
-};
+#include "DataMemory.hh"
+#include "packet/MemReqPacket.hh"
 
-class MemReqPacket : public acalsim::SimPacket {
+class MemProcessEvent : public SimEvent {
 public:
-	MemReqPacket(const std::string& _name, const Request& _req) : req(_req) {}
-	~MemReqPacket() {}
+	MemProcessEvent(SimBase* _sim, const Request& _req) : SimEvent("MemProcessEvent"), sim(_sim), req(_req) {
+		this->clearFlags(Managed);
+	}
+	~MemProcessEvent() {}
+	MemProcessEvent() {}
 
-	void visit(acalsim::Tick _when, acalsim::SimModule& _module) override;
-	void visit(acalsim::Tick _when, acalsim::SimBase& _simulator) override;
-
-	const Request& getRequest() const { return this->req; }
+	void renew(SimBase* _sim) { this->sim = _sim; }
+	void process() override;
 
 private:
-	Request req;
+	SimBase* sim;
+	Request  req;
 };
 
-#endif  // SRC_APP_SOC_INCLUDE_MEMREQPACKET_HH_
+#endif

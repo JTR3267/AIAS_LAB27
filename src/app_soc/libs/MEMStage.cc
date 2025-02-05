@@ -66,12 +66,14 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 	auto inst_type = inst.op;
 	switch (inst_type) {
 		case instr_type::SB: {
-			auto memReq = new MemReqPacket("MemReq", _info->alu_out, _info->write_data, MemReqPacket::ReqType::WRITE);
+			auto memReq = new MemReqPacket(
+			    "MemReq", Request{.addr = _info->alu_out, .data = _info->write_data, .type = Request::ReqType::WRITE});
 			this->sendReqToMemory(memReq);
 			break;
 		}
 		case instr_type::LW: {
-			auto memReq = new MemReqPacket("MemReq", _info->alu_out, 0, MemReqPacket::ReqType::READ);
+			auto memReq =
+			    new MemReqPacket("MemReq", Request{.addr = _info->alu_out, .data = 0, .type = Request::ReqType::READ});
 			this->sendReqToMemory(memReq);
 			break;
 		}

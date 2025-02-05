@@ -23,7 +23,7 @@
 
 class MemRespPacket : public acalsim::SimPacket {
 public:
-	MemRespPacket(const std::string& _name) {}
+	MemRespPacket(const std::string& _name, uint32_t _data) : data(_data) {}
 	~MemRespPacket() {}
 
 	void visit(acalsim::Tick _when, acalsim::SimModule& _module) override;

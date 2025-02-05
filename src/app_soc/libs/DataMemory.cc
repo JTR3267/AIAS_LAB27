@@ -46,4 +46,35 @@ void DataMemory::step() {
 
 void DataMemory::cleanup() {}
 
-void DataMemory::processReqPkt(){};
+void DataMemory::processMemoryRequest(Request& _req) {
+	// Check Request type
+	if (_req.type == Request::ReqType::READ) {
+		// Read data from memory
+		auto data_ptr = (uint32_t*)this->readData(_req.addr, sizeof(uint32_t), true);
+		// Create MemRespPacket
+		auto resp_pkt = new MemRespPacket("MemRespPacket", *data_ptr);
+		// Send MemRespPacket to the MasterPort
+		this->m_port_->push(resp_pkt);
+	} else if (_req.type == Request::ReqType::WRITE) {
+		// Write data to memory
+		this->writeData(&_req.data, _req.addr, sizeof(uint32_t));
+		// Create MemRespPacket
+		auto resp_pkt = new MemRespPacket("MemRespPacket", 0);
+		// Send MemRespPacket to the MasterPort
+		this->m_port_->push(resp_pkt);
+	}
+}
+
+void DataMemory::reqPacketHandler(MemReqPacket* _pkt) {
+	auto req = _pkt->getRequest();
+	// Check Request type
+	if (req.type == Request::ReqType::READ) {
+		auto read_latency  = acalsim::top->getParameter<int>("SOC", "memory_read_latency");
+		auto process_event = new MemProcessEvent(this, req);
+		this->scheduleEvent(process_event, acalsim::top->getGlobalTick() + read_latency);
+	} else if (req.type == Request::ReqType::WRITE) {
+		auto write_latency = acalsim::top->getParameter<int>("SOC", "memory_write_latency");
+		auto process_event = new MemProcessEvent(this, req);
+		this->scheduleEvent(process_event, acalsim::top->getGlobalTick() + write_latency);
+	}
+};

@@ -538,6 +538,7 @@ uint32_t InstMemory::label_addr(char* label, int orig_line) {
 		if (streq(this->labels[i].label, label)) return this->labels[i].loc;
 	}
 	print_syntax_error(orig_line, "Undefined label");
+	return 0;
 }
 
 void InstMemory::normalize_labels() {
