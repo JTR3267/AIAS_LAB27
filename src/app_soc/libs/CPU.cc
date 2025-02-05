@@ -27,7 +27,10 @@
 CPU::CPU(const std::string& _name, const std::string& _m_port, const std::string& _s_port)
     : acalsim::CPPSimBase(_name) {
 	this->imem = new InstMemory();
-	for (int i = 0; i < 32; i++) { this->regs[i] = new Register<uint32_t>(std::make_shared<uint32_t>(0)); }
+	for (int i = 0; i < 32; i++) {
+		this->regs[i].first  = false;
+		this->regs[i].second = new Register<uint32_t>(std::make_shared<uint32_t>(0));
+	}
 
 	this->if_id_reg   = new Register<if_stage_out>();
 	this->id_exe_reg  = new Register<id_stage_out>();
@@ -93,7 +96,12 @@ void CPU::updatePipeRegisters() {
 }
 
 void CPU::updateRegisterFile() {
-	for (int i = 0; i < 32; i++) { this->regs[i]->update(); }
+	for (int i = 0; i < 32; i++) {
+		if (this->regs[i].first) {
+			this->regs[i].second->update();
+			this->regs[i].first = false;
+		}
+	}
 }
 
 void CPU::printRegfile() {
@@ -104,7 +112,7 @@ void CPU::printRegfile() {
 	for (int i = 0; i < 32; i++) {
 		oss << "x" << std::setw(2) << std::setfill('0') << std::dec << i << ":0x";
 
-		auto val = regs[i]->get();
+		auto val = regs[i].second->get();
 
 		uint32_t reg_value = (val) ? *val : 0;
 
@@ -136,10 +144,10 @@ void CPU::checkNextCycleEvent() {
 }
 
 void CPU::updateSystemStates() {
+	this->checkNextCycleEvent();
 	this->updatePipeRegisters();
 	this->updateRegisterFile();
 	this->updatePC();
-	this->checkNextCycleEvent();
 }
 
 void CPU::step() {

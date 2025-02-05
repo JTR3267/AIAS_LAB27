@@ -99,12 +99,13 @@ public:
 
 	const uint32_t& readRegister(int index) {
 		CLASS_ASSERT(index >= 0 && index < 32);
-		return *(this->regs[index]->get());
+		return *(this->regs[index].second->get());
 	}
 
 	void writeRegister(int index, uint32_t value) {
 		CLASS_ASSERT(index >= 0 && index < 32);
-		this->regs[index]->set(std::make_shared<uint32_t>(value));
+		this->regs[index].first = true;
+		this->regs[index].second->set(std::make_shared<uint32_t>(value));
 		INFO << "WB Stage write " << value << " to register x" << index;
 	}
 
@@ -113,14 +114,14 @@ public:
 	void handler(MemRespPacket* _pkt);
 
 private:
-	InstMemory*              imem;
-	acalsim::MasterPort*     m_port_;
-	acalsim::SlavePort*      s_port_;
-	Register<uint32_t>*      regs[32];
-	Register<if_stage_out>*  if_id_reg;
-	Register<id_stage_out>*  id_exe_reg;
-	Register<exe_stage_out>* exe_mem_reg;
-	Register<mem_stage_out>* mem_wb_reg;
+	InstMemory*                          imem;
+	acalsim::MasterPort*                 m_port_;
+	acalsim::SlavePort*                  s_port_;
+	std::pair<bool, Register<uint32_t>*> regs[32];
+	Register<if_stage_out>*              if_id_reg;
+	Register<id_stage_out>*              id_exe_reg;
+	Register<exe_stage_out>*             exe_mem_reg;
+	Register<mem_stage_out>*             mem_wb_reg;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_CPU_HH_

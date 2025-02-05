@@ -91,12 +91,14 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 			break;
 		}
 		case instr_type::HCF:
+		case instr_type::UNIMPL:
 		case instr_type::BEQ: {
 			auto info  = std::make_shared<mem_stage_out>();
 			info->inst = inst;
 			this->mem_wb_reg->set(info);
 			break;
 		}
+
 		default: CLASS_ERROR << "Invalid instruction type"; break;
 	}
 }
