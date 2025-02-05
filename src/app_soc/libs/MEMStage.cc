@@ -40,17 +40,19 @@ void MEMStage::execDataPath() {
 		// Set the status to IDLE
 		this->setStatus(mem_stage_status::IDLE);
 	} else if (this->status == mem_stage_status::IDLE) {
-		auto info      = this->exe_mem_reg->get();
-		auto inst_type = info->inst.op;
-		if (inst_type == instr_type::SB || inst_type == instr_type::BEQ) {
-			this->checkMemoryAccess(info);
-		} else {
-			// Check for data hazard
-			if (this->checkDataHazard(info->inst.a2.reg, info->inst.a3.reg)) {
-				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
-				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
+		auto info = this->exe_mem_reg->get();
+		if (info) {
+			auto inst_type = info->inst.op;
+			if (inst_type == instr_type::SB || inst_type == instr_type::BEQ) {
+				this->checkMemoryAccess(info);
+			} else {
+				// Check for data hazard
+				if (this->checkDataHazard(info->inst.a2.reg, info->inst.a3.reg)) {
+					dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
+					dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
+				}
+				this->checkMemoryAccess(info);
 			}
-			this->checkMemoryAccess(info);
 		}
 	} else {
 		CLASS_ERROR << "Invalid MEMStage status";

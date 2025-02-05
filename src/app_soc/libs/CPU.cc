@@ -24,7 +24,8 @@
 #include "Register.hh"
 #include "WBStage.hh"
 
-CPU::CPU(const std::string& _name, const std::string& _m_port, const std::string& _s_port) : acalsim::CPPSimBase(name) {
+CPU::CPU(const std::string& _name, const std::string& _m_port, const std::string& _s_port)
+    : acalsim::CPPSimBase(_name) {
 	this->imem = new InstMemory();
 	for (int i = 0; i < 32; i++) { this->regs[i] = new Register<uint32_t>(std::make_shared<uint32_t>(0)); }
 

@@ -30,28 +30,31 @@ void WBStage::step() {}
 
 void WBStage::execDataPath() {
 	auto info = this->mem_wb_reg->get();
-	// Check for data hazard
-	if (this->checkDataHazard(info->inst.a2.reg, info->inst.a3.reg)) {
-		dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
-		dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
-	}
-	// Write back to the register file
-	auto inst_type = info->inst.op;
-	switch (inst_type) {
-		case instr_type::LW:
-			dynamic_cast<CPU*>(this->getSimulator())->writeRegister(info->inst.a1.reg, info->mem_val.load_data);
-			break;
-		case instr_type::JAL:
-			dynamic_cast<CPU*>(this->getSimulator())->writeRegister(info->inst.a1.reg, info->mem_val.pc_plus_4_to_rd);
-			break;
-		case instr_type::ADD:
-		case instr_type::ADDI:
-		case instr_type::LUI:
-			dynamic_cast<CPU*>(this->getSimulator())->writeRegister(info->inst.a1.reg, info->mem_val.alu_out);
-			break;
-		case instr_type::SB:
-		case instr_type::BEQ: break;
-		default: CLASS_ERROR << "Invalid instruction type"; break;
+	if (info) {
+		// Check for data hazard
+		if (this->checkDataHazard(info->inst.a2.reg, info->inst.a3.reg)) {
+			dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
+			dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
+		}
+		// Write back to the register file
+		auto inst_type = info->inst.op;
+		switch (inst_type) {
+			case instr_type::LW:
+				dynamic_cast<CPU*>(this->getSimulator())->writeRegister(info->inst.a1.reg, info->mem_val.load_data);
+				break;
+			case instr_type::JAL:
+				dynamic_cast<CPU*>(this->getSimulator())
+				    ->writeRegister(info->inst.a1.reg, info->mem_val.pc_plus_4_to_rd);
+				break;
+			case instr_type::ADD:
+			case instr_type::ADDI:
+			case instr_type::LUI:
+				dynamic_cast<CPU*>(this->getSimulator())->writeRegister(info->inst.a1.reg, info->mem_val.alu_out);
+				break;
+			case instr_type::SB:
+			case instr_type::BEQ: break;
+			default: CLASS_ERROR << "Invalid instruction type"; break;
+		}
 	}
 }
 
@@ -62,4 +65,7 @@ bool WBStage::checkDataHazard(int _rs1, int _rs2) {
 	return (rd == _rs1 || rd == _rs2);
 }
 
-bool WBStage::checkHcf() { return (this->mem_wb_reg->get()->inst.op == instr_type::HCF); }
+bool WBStage::checkHcf() {
+	if (this->mem_wb_reg->get()) return this->mem_wb_reg->get()->inst.op == instr_type::HCF;
+	return false;
+}
