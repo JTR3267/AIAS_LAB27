@@ -64,6 +64,11 @@ public:
 		this->stall = true;
 	}
 
+	void setFlush() {
+		this->id_exe_reg->setFlush();
+		this->flush = true;
+	}
+
 private:
 	Register<if_stage_out>* if_id_reg;
 	Register<id_stage_out>* id_exe_reg;

@@ -78,6 +78,10 @@ void EXEStage::execDataPath() {
 					write_data_ = 0;
 					break;
 			}
+			if (branch_compare.first) {
+				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setFlush();
+				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setFlush();
+			}
 			std::shared_ptr<exe_stage_out> infoPtr = std::make_shared<exe_stage_out>(exe_stage_out{
 			    .pc = id_stage_out->pc, .inst = id_stage_out->inst, .alu_out = alu_out_, .write_data = write_data_});
 			this->exe_mem_reg->set(infoPtr);

@@ -63,6 +63,11 @@ public:
 		this->stall = true;
 	}
 
+	void setFlush() {
+		this->if_id_reg->setFlush();
+		this->flush = true;
+	}
+
 private:
 	Register<if_stage_out>*   if_id_reg;
 	Register<uint32_t>*       pc_reg;
