@@ -56,6 +56,13 @@ public:
 
 	bool getStallStatus() { return this->stall; }
 
+	bool checkDataHazard(int _rs1, int _rs2);
+
+	void setStall() {
+		this->exe_mem_reg->setStall();
+		this->stall = true;
+	}
+
 private:
 	Register<id_stage_out>*  id_exe_reg;
 	Register<exe_stage_out>* exe_mem_reg;

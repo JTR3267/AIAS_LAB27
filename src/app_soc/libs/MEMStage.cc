@@ -17,6 +17,7 @@
 #include "MEMStage.hh"
 
 #include "CPU.hh"
+#include "EXEStage.hh"
 #include "IDStage.hh"
 #include "IFStage.hh"
 
@@ -98,7 +99,6 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 			this->mem_wb_reg->set(info);
 			break;
 		}
-
 		default: CLASS_ERROR << "Invalid instruction type"; break;
 	}
 }
@@ -111,6 +111,11 @@ bool MEMStage::checkDataHazard(int _rs1, int _rs2) {
 }
 
 void MEMStage::sendReqToMemory(MemReqPacket* _pkt) {
+	// Set IF, ID, EXE stage to stall
+	dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
+	dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
+	dynamic_cast<EXEStage*>(this->getSimulator()->getModule("EXEStage"))->setStall();
+	// Send the packet to the MasterPort
 	auto m_port = dynamic_cast<CPU*>(this->getSimulator())->getMasterPort();
 	if (m_port->isPushReady()) {
 		// Set the status to WAIT

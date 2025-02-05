@@ -134,11 +134,11 @@ void CPU::checkNextCycleEvent() {
 	             dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->getStallStatus();
 	bool hcf = dynamic_cast<WBStage*>(this->getModule("WBStage"))->checkHcf();
 	if (!stall && !hcf) {
-		CLASS_INFO << "stall : " << stall << " hcf : " << hcf;
 		auto rc    = acalsim::top->getRecycleContainer();
 		auto event = rc->acquire<CPUSingleIterationEvent>(&CPUSingleIterationEvent::renew, this);
 		this->scheduleEvent(event, acalsim::top->getGlobalTick() + 1);
 	} else if (hcf) {
+		CLASS_INFO << "HCF instruction detected in WB stage. Simulation ends.";
 		this->printRegfile();
 	}
 }

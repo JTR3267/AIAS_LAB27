@@ -16,6 +16,9 @@
 
 #include "EXEStage.hh"
 
+#include "IDStage.hh"
+#include "IFStage.hh"
+
 EXEStage::EXEStage(const std::string& name, Register<id_stage_out>* _id_exe_reg, Register<exe_stage_out>* _exe_mem_reg)
     : acalsim::SimModule(name), id_exe_reg(_id_exe_reg), exe_mem_reg(_exe_mem_reg), stall(false) {}
 
@@ -29,6 +32,11 @@ void EXEStage::execDataPath() {
 	if (!this->stall) {
 		auto id_stage_out = this->id_exe_reg->get();
 		if (id_stage_out) {
+			// Check for data hazard
+			if (this->checkDataHazard(id_stage_out->inst.a2.reg, id_stage_out->inst.a3.reg)) {
+				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
+				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
+			}
 			CLASS_INFO << "Process instruction at PC = " << id_stage_out->pc << " : " << id_stage_out->inst.op;
 			uint32_t                  alu_out_, write_data_;
 			std::pair<bool, uint32_t> branch_compare;
@@ -76,4 +84,11 @@ void EXEStage::execDataPath() {
 		}
 	}
 	this->stall = false;
+}
+
+bool EXEStage::checkDataHazard(int _rs1, int _rs2) {
+	// Get rs1 and rs2 from the ID stage inbound register
+	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
+	auto rd     = id_reg->inst.a1.reg;
+	return (rd == _rs1 || rd == _rs2) && (rd != 0);
 }
