@@ -59,6 +59,11 @@ public:
 
 	std::shared_ptr<if_stage_out> getRegInfoFromID() { return this->if_id_reg->get(); }
 
+	void updateStatus() {
+		this->stall = false;
+		this->flush = false;
+	}
+
 	void setStall() {
 		this->id_exe_reg->setStall();
 		this->stall = true;

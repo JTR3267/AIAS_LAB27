@@ -126,6 +126,12 @@ void CPU::printRegfile() {
 	CLASS_INFO << oss.str();
 }
 
+void CPU::updateStatus() {
+	dynamic_cast<IFStage*>(this->getModule("IFStage"))->updateStatus();
+	dynamic_cast<IDStage*>(this->getModule("IDStage"))->updateStatus();
+	dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->updateStatus();
+}
+
 void CPU::updatePC() { dynamic_cast<IFStage*>(this->getModule("IFStage"))->updatePC(); }
 
 void CPU::checkNextCycleEvent() {
@@ -134,6 +140,7 @@ void CPU::checkNextCycleEvent() {
 	             dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->getStallStatus();
 	bool hcf = dynamic_cast<WBStage*>(this->getModule("WBStage"))->checkHcf();
 	if (!stall && !hcf) {
+		CLASS_INFO << "Stall = " << stall << ", HCF = " << hcf;
 		auto rc    = acalsim::top->getRecycleContainer();
 		auto event = rc->acquire<CPUSingleIterationEvent>(&CPUSingleIterationEvent::renew, this);
 		this->scheduleEvent(event, acalsim::top->getGlobalTick() + 1);
@@ -145,6 +152,7 @@ void CPU::checkNextCycleEvent() {
 
 void CPU::updateSystemStates() {
 	this->checkNextCycleEvent();
+	this->updateStatus();
 	this->updatePipeRegisters();
 	this->updateRegisterFile();
 	this->updatePC();

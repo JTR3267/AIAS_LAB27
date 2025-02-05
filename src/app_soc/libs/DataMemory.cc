@@ -47,15 +47,17 @@ void DataMemory::step() {
 void DataMemory::cleanup() {}
 
 void DataMemory::processMemoryRequest(Request& _req) {
+	CLASS_INFO << "Finish Memory Process at Cycle = " << acalsim::top->getGlobalTick();
 	// Check Request type
 	if (_req.type == Request::ReqType::READ) {
 		// Read data from memory
 		auto data_ptr = (uint32_t*)this->readData(_req.addr, sizeof(uint32_t), true);
 		// Create MemRespPacket
-		auto resp_pkt = new MemRespPacket("MemRespPacket", *data_ptr);
+		auto resp_pkt = new MemRespPacket("MemRespPacket", data_ptr[0]);
 		// Send MemRespPacket to the MasterPort
 		this->m_port_->push(resp_pkt);
 	} else if (_req.type == Request::ReqType::WRITE) {
+		CLASS_INFO << "Write data 0x" << std::hex << &_req.data << " to memory at address = " << std::dec << _req.addr;
 		// Write data to memory
 		this->writeData(&_req.data, _req.addr, sizeof(uint32_t));
 		// Create MemRespPacket
@@ -66,15 +68,20 @@ void DataMemory::processMemoryRequest(Request& _req) {
 }
 
 void DataMemory::reqPacketHandler(MemReqPacket* _pkt) {
+	CLASS_INFO << "Memory Receive Request at Cycle = " << acalsim::top->getGlobalTick();
 	auto req = _pkt->getRequest();
 	// Check Request type
 	if (req.type == Request::ReqType::READ) {
-		auto read_latency  = acalsim::top->getParameter<int>("SOC", "memory_read_latency");
+		CLASS_INFO << "Detect Read Request";
+		auto read_latency  = acalsim::top->getParameter<acalsim::Tick>("SOC", "memory_read_latency");
 		auto process_event = new MemProcessEvent(this, req);
 		this->scheduleEvent(process_event, acalsim::top->getGlobalTick() + read_latency);
 	} else if (req.type == Request::ReqType::WRITE) {
-		auto write_latency = acalsim::top->getParameter<int>("SOC", "memory_write_latency");
+		CLASS_INFO << "Detect Write Request";
+		auto write_latency = acalsim::top->getParameter<acalsim::Tick>("SOC", "memory_write_latency");
 		auto process_event = new MemProcessEvent(this, req);
 		this->scheduleEvent(process_event, acalsim::top->getGlobalTick() + write_latency);
+	} else {
+		CLASS_ERROR << "Invalid Request type detected in DataMemory";
 	}
 };

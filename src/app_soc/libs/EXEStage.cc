@@ -37,7 +37,7 @@ void EXEStage::execDataPath() {
 				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
 			}
-			CLASS_INFO << "Process instruction at PC = " << id_stage_out->pc << " : " << id_stage_out->inst.op;
+			CLASS_INFO << "Process instruction at PC = " << id_stage_out->pc;
 			uint32_t                  alu_out_, write_data_;
 			std::pair<bool, uint32_t> branch_compare;
 			switch (id_stage_out->inst.op) {
@@ -87,12 +87,14 @@ void EXEStage::execDataPath() {
 			this->exe_mem_reg->set(infoPtr);
 		}
 	}
-	this->stall = false;
 }
 
 bool EXEStage::checkDataHazard(int _rs1, int _rs2) {
 	// Get rs1 and rs2 from the ID stage inbound register
 	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
-	auto rd     = id_reg->inst.a1.reg;
-	return (rd == _rs1 || rd == _rs2) && (rd != 0);
+	if (id_reg) {
+		auto rd = id_reg->inst.a1.reg;
+		return (rd == _rs1 || rd == _rs2) && (rd != 0);
+	}
+	return false;
 }

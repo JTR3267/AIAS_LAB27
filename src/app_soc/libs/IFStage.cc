@@ -34,7 +34,7 @@ void IFStage::execDataPath() {
 	int      index      = current_pc / 4;
 	if (!this->flush && !this->stall) {
 		const instr& fetch_instr = dynamic_cast<CPU*>(this->getSimulator())->fetchInstr(index);
-
+		CLASS_INFO << "Process instruction at PC = " << current_pc;
 		std::shared_ptr<if_stage_out> infoPtr =
 		    std::make_shared<if_stage_out>(if_stage_out{.pc = current_pc, .inst = fetch_instr});
 
@@ -45,6 +45,4 @@ void IFStage::execDataPath() {
 	} else {
 		this->pc_reg->set(std::make_shared<uint32_t>(current_pc + 4));
 	}
-	this->stall = false;
-	this->flush = false;
 }

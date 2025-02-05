@@ -14,7 +14,15 @@
 
 ## RV32 Emulator Testing Assembly Code
 
-main:
-addi x28,x0 ,2
-add  x29,x0 ,x0
+.data
+data:
+.byte 0 0 0 4
+
+.text
+la      t0, data
+lw		t1, 0(t0)
+addi	x0, x0, 0
+addi	t2, t1, 5
+sb		t2, 0(t0)
+lw		t3, 0(t0)
 hcf

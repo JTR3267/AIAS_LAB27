@@ -21,7 +21,10 @@
 
 #include "ACALSim.hh"
 
-BaseMemory::BaseMemory(size_t _size) : size(_size) { this->mem = std::malloc(this->size); }
+BaseMemory::BaseMemory(size_t _size) : size(_size) {
+	this->mem = std::malloc(this->size);
+	std::memset(this->mem, 0, this->size);
+}
 
 BaseMemory::~BaseMemory() { std::free(this->mem); }
 

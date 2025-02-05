@@ -51,6 +51,7 @@ void WBStage::execDataPath() {
 			}
 			case instr_type::ADD:
 			case instr_type::ADDI:
+			case instr_type::AUIPC:
 			case instr_type::LUI: {
 				cpu->writeRegister(info->inst.a1.reg, info->mem_val.alu_out);
 				break;
@@ -66,8 +67,11 @@ void WBStage::execDataPath() {
 bool WBStage::checkDataHazard(int _rs1, int _rs2) {
 	// Get rs1 and rs2 from the ID stage inbound register
 	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
-	auto rd     = id_reg->inst.a1.reg;
-	return (rd == _rs1 || rd == _rs2) && (rd != 0);
+	if (id_reg) {
+		auto rd = id_reg->inst.a1.reg;
+		return (rd == _rs1 || rd == _rs2) && (rd != 0);
+	}
+	return false;
 }
 
 bool WBStage::checkHcf() {

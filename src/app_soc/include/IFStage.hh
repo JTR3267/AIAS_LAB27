@@ -58,6 +58,11 @@ public:
 
 	void updatePC() { this->pc_reg->update(); }
 
+	void updateStatus() {
+		this->stall = false;
+		this->flush = false;
+	}
+
 	void setStall() {
 		this->if_id_reg->setStall();
 		this->stall = true;

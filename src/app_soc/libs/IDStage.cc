@@ -33,7 +33,7 @@ void IDStage::execDataPath() {
 
 	if (!this->flush && !this->stall) {
 		if (if_stage_out) {
-			CLASS_INFO << "Process instruction at PC = " << if_stage_out->pc << " : " << if_stage_out->inst.op;
+			CLASS_INFO << "Process instruction at PC = " << if_stage_out->pc;
 			switch (if_stage_out->inst.op) {
 				case ADD:
 				case SUB:
@@ -117,6 +117,4 @@ void IDStage::execDataPath() {
 			this->id_exe_reg->set(infoPtr);
 		}
 	}
-	this->stall = false;
-	this->flush = false;
 }

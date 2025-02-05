@@ -19,5 +19,4 @@
 void MemProcessEvent::process() {
 	auto mem = dynamic_cast<DataMemory*>(this->sim);
 	mem->processMemoryRequest(this->req);
-	CLASS_INFO << "Memory finish processing in Cycle = " << acalsim::top->getGlobalTick();
 }

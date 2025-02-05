@@ -58,6 +58,8 @@ public:
 
 	bool checkDataHazard(int _rs1, int _rs2);
 
+	void updateStatus() { this->stall = false; }
+
 	void setStall() {
 		this->exe_mem_reg->setStall();
 		this->stall = true;
