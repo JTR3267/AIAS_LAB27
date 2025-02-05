@@ -20,4 +20,6 @@ void CPUSingleIterationEvent::process() {
 	auto cpu = dynamic_cast<CPU*>(this->sim);
 	cpu->execDataPath();
 	cpu->updateSystemStates();
+
+	CLASS_INFO << "CPU finish the iteration in Cycle = " << acalsim::top->getGlobalTick();
 }

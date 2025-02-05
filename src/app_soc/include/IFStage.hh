@@ -66,7 +66,6 @@ public:
 private:
 	Register<if_stage_out>*   if_id_reg;
 	Register<uint32_t>*       pc_reg;
-	uint32_t                  current_pc;
 	std::pair<bool, uint32_t> exe_next_pc;
 	bool                      flush;
 	bool                      stall;

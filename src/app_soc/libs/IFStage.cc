@@ -30,7 +30,8 @@ void IFStage::init() { CLASS_INFO << "IFStage Initialization"; }
 void IFStage::step() {}
 
 void IFStage::execDataPath() {
-	int index = *(this->pc_reg->get()) / 4;
+	uint32_t current_pc = *(this->pc_reg->get());
+	int      index      = current_pc / 4;
 	if (!this->flush && !this->stall) {
 		const instr& fetch_instr = dynamic_cast<CPU*>(this->getSimulator())->fetchInstr(index);
 
@@ -42,7 +43,7 @@ void IFStage::execDataPath() {
 	if (this->exe_next_pc.first) {
 		this->pc_reg->set(std::make_shared<uint32_t>(this->exe_next_pc.second));
 	} else {
-		this->pc_reg->set(std::make_shared<uint32_t>(this->current_pc + 4));
+		this->pc_reg->set(std::make_shared<uint32_t>(current_pc + 4));
 	}
 	this->stall = false;
 	this->flush = false;
