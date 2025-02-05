@@ -78,11 +78,11 @@ void CPU::registerModules() {
 }
 
 void CPU::execDataPath() {
+	dynamic_cast<WBStage*>(this->getModule("WBStage"))->execDataPath();
+	dynamic_cast<MEMStage*>(this->getModule("MEMStage"))->execDataPath();
+	dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->execDataPath();
 	dynamic_cast<IDStage*>(this->getModule("IDStage"))->execDataPath();
 	dynamic_cast<IFStage*>(this->getModule("IFStage"))->execDataPath();
-	dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->execDataPath();
-	dynamic_cast<MEMStage*>(this->getModule("MEMStage"))->execDataPath();
-	dynamic_cast<WBStage*>(this->getModule("WBStage"))->execDataPath();
 }
 
 void CPU::updatePipeRegisters() {

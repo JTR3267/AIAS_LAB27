@@ -33,69 +33,75 @@ void IDStage::execDataPath() {
 
 	if (!this->flush && !this->stall) {
 		if (if_stage_out) {
+			CLASS_INFO << "Process instruction at PC = " << if_stage_out->pc << " : " << if_stage_out->inst.op;
 			switch (if_stage_out->inst.op) {
-				case ADD:
-				case SUB:
-				case SLT:
-				case SLTU:
-				case AND:
-				case OR:
-				case XOR:
-				case SLL:
-				case SRL:
-				case SRA:
+				case instr_type::ADD:
+				case instr_type::SUB:
+				case instr_type::SLT:
+				case instr_type::SLTU:
+				case instr_type::AND:
+				case instr_type::OR:
+				case instr_type::XOR:
+				case instr_type::SLL:
+				case instr_type::SRL:
+				case instr_type::SRA:
 					rs1_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
 					rs2_data  = cpu->readRegister(if_stage_out->inst.a3.reg);
 					immediate = 0;
 					break;
 
-				case ADDI:
-				case SLTI:
-				case SLTIU:
-				case ANDI:
-				case ORI:
-				case XORI:
-				case SLLI:
-				case SRLI:
-				case SRAI:
+				case instr_type::ADDI:
+				case instr_type::SLTI:
+				case instr_type::SLTIU:
+				case instr_type::ANDI:
+				case instr_type::ORI:
+				case instr_type::XORI:
+				case instr_type::SLLI:
+				case instr_type::SRLI:
+				case instr_type::SRAI:
 					rs1_data  = 0;
 					rs2_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
 					immediate = if_stage_out->inst.a3.imm;
 					break;
 
-				case BEQ:
-				case BGE:
-				case BGEU:
-				case BLT:
-				case BLTU:
-				case BNE:
+				case instr_type::BEQ:
+				case instr_type::BGE:
+				case instr_type::BGEU:
+				case instr_type::BLT:
+				case instr_type::BLTU:
+				case instr_type::BNE:
 					rs1_data  = cpu->readRegister(if_stage_out->inst.a1.reg);
 					rs2_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
 					immediate = if_stage_out->inst.a3.imm;
 					break;
 
-				case SB:
+				case instr_type::SB:
 					rs1_data  = cpu->readRegister(if_stage_out->inst.a1.reg);
 					rs2_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
 					immediate = if_stage_out->inst.a3.imm;
 					break;
-				case LW:
+				case instr_type::LW:
 					rs1_data  = 0;
 					rs2_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
 					immediate = if_stage_out->inst.a3.imm;
 					break;
-				case JALR:
+				case instr_type::JALR:
 					rs1_data  = 0;
 					rs2_data  = if_stage_out->inst.a2.reg;
 					immediate = if_stage_out->inst.a3.imm;
 					break;
-				case LUI:
+				case instr_type::LUI:
 					rs1_data  = 0;
 					rs2_data  = 0;
 					immediate = if_stage_out->inst.a2.imm;
-
-				case HCF:
-				case UNIMPL:
+					break;
+				case instr_type::HCF:
+					CLASS_INFO << "Encountered HCF!";
+					rs1_data  = 0;
+					rs2_data  = 0;
+					immediate = 0;
+					break;
+				case instr_type::UNIMPL:
 				default:
 					rs1_data  = 0;
 					rs2_data  = 0;

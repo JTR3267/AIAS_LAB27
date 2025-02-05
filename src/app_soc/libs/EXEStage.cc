@@ -29,6 +29,7 @@ void EXEStage::execDataPath() {
 	if (!this->stall) {
 		auto id_stage_out = this->id_exe_reg->get();
 		if (id_stage_out) {
+			CLASS_INFO << "Process instruction at PC = " << id_stage_out->pc << " : " << id_stage_out->inst.op;
 			uint32_t                  alu_out_, write_data_;
 			std::pair<bool, uint32_t> branch_compare;
 			switch (id_stage_out->inst.op) {

@@ -105,6 +105,7 @@ public:
 	void writeRegister(int index, uint32_t value) {
 		CLASS_ASSERT(index >= 0 && index < 32);
 		this->regs[index]->set(std::make_shared<uint32_t>(value));
+		INFO << "WB Stage write " << value << " to register x" << index;
 	}
 
 	acalsim::MasterPort* getMasterPort() { return this->m_port_; }

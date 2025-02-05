@@ -33,15 +33,16 @@ void MEMStage::step() {}
 void MEMStage::execDataPath() {
 	if (this->status == mem_stage_status::WAIT) {
 		// Send the data to the WB stage
-		auto mem_out     = std::make_shared<mem_stage_out>();
-		mem_out->inst    = this->exe_mem_reg->get()->inst;
-		mem_out->mem_val = {.load_data = this->resp_pkt->getData()};
-		this->mem_wb_reg->set(mem_out);
+		auto info     = std::make_shared<mem_stage_out>();
+		info->inst    = this->exe_mem_reg->get()->inst;
+		info->mem_val = {.load_data = this->resp_pkt->getData()};
+		this->mem_wb_reg->set(info);
 		// Set the status to IDLE
 		this->setStatus(mem_stage_status::IDLE);
 	} else if (this->status == mem_stage_status::IDLE) {
 		auto info = this->exe_mem_reg->get();
 		if (info) {
+			CLASS_INFO << "Process instruction at PC = " << info->pc << " : " << info->inst.op;
 			auto inst_type = info->inst.op;
 			if (inst_type == instr_type::SB || inst_type == instr_type::BEQ) {
 				this->checkMemoryAccess(info);
@@ -74,25 +75,26 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 			break;
 		}
 		case instr_type::JAL: {
-			auto mem_out     = std::make_shared<mem_stage_out>();
-			mem_out->inst    = inst;
-			mem_out->mem_val = {.pc_plus_4_to_rd = (_info->pc + 4)};
-			this->mem_wb_reg->set(mem_out);
+			auto info     = std::make_shared<mem_stage_out>();
+			info->inst    = inst;
+			info->mem_val = {.pc_plus_4_to_rd = (_info->pc + 4)};
+			this->mem_wb_reg->set(info);
 			break;
 		}
 		case instr_type::ADD:
 		case instr_type::ADDI:
 		case instr_type::LUI: {
-			auto mem_out     = std::make_shared<mem_stage_out>();
-			mem_out->inst    = inst;
-			mem_out->mem_val = {.alu_out = _info->alu_out};
-			this->mem_wb_reg->set(mem_out);
+			auto info     = std::make_shared<mem_stage_out>();
+			info->inst    = inst;
+			info->mem_val = {.alu_out = _info->alu_out};
+			this->mem_wb_reg->set(info);
 			break;
 		}
+		case instr_type::HCF:
 		case instr_type::BEQ: {
-			auto mem_out  = std::make_shared<mem_stage_out>();
-			mem_out->inst = inst;
-			this->mem_wb_reg->set(mem_out);
+			auto info  = std::make_shared<mem_stage_out>();
+			info->inst = inst;
+			this->mem_wb_reg->set(info);
 			break;
 		}
 		default: CLASS_ERROR << "Invalid instruction type"; break;
@@ -103,7 +105,7 @@ bool MEMStage::checkDataHazard(int _rs1, int _rs2) {
 	// Get rs1 and rs2 from the ID stage inbound register
 	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
 	auto rd     = id_reg->inst.a1.reg;
-	return (rd == _rs1 || rd == _rs2);
+	return (rd == _rs1 || rd == _rs2) && (rd != 0);
 }
 
 void MEMStage::sendReqToMemory(MemReqPacket* _pkt) {
