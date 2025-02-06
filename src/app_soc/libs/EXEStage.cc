@@ -20,7 +20,7 @@
 #include "IFStage.hh"
 
 EXEStage::EXEStage(const std::string& name, Register<id_stage_out>* _id_exe_reg, Register<exe_stage_out>* _exe_mem_reg)
-    : acalsim::SimModule(name), id_exe_reg(_id_exe_reg), exe_mem_reg(_exe_mem_reg), stall(false) {}
+    : acalsim::SimModule(name), id_exe_reg(_id_exe_reg), exe_mem_reg(_exe_mem_reg), stall_ma(false) {}
 
 EXEStage::~EXEStage() {}
 
@@ -29,13 +29,13 @@ void EXEStage::init() { CLASS_INFO << "EXEStage Initialization"; }
 void EXEStage::step() {}
 
 void EXEStage::execDataPath() {
-	if (!this->stall) {
+	if (!this->stall_ma) {
 		auto info = this->id_exe_reg->get();
 		if (info) {
 			// Check for data hazard
 			if (this->checkDataHazard(info->inst.a1.reg)) {
-				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
-				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
+				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
+				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 			}
 			CLASS_INFO << "Process instruction at PC = " << info->pc;
 			uint32_t                  alu_out_, write_data_;
@@ -67,7 +67,7 @@ void EXEStage::execDataPath() {
 					break;
 				case SB:
 					alu_out_    = info->rs2_data + info->immediate;
-					write_data_ = info->rs1_data & 0xFF;
+					write_data_ = info->rs1_data & 0x000000FF;
 					break;
 				case LW:
 					alu_out_    = info->rs2_data + info->immediate;
@@ -85,6 +85,9 @@ void EXEStage::execDataPath() {
 			std::shared_ptr<exe_stage_out> infoPtr = std::make_shared<exe_stage_out>(
 			    exe_stage_out{.pc = info->pc, .inst = info->inst, .alu_out = alu_out_, .write_data = write_data_});
 			this->exe_mem_reg->set(infoPtr);
+		} else {
+			this->exe_mem_reg->set(nullptr);
+			CLASS_INFO << "NOP";
 		}
 	}
 }

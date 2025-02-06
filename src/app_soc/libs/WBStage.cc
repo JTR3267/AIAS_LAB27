@@ -34,8 +34,8 @@ void WBStage::execDataPath() {
 		CLASS_INFO << "Process instruction : " << info->inst.op;
 		// Check for data hazard
 		if (this->checkDataHazard(info->inst.a1.reg)) {
-			dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
-			dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
+			dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
+			dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 		}
 		// Write back to the register file
 		auto inst_type = info->inst.op;
@@ -61,6 +61,8 @@ void WBStage::execDataPath() {
 			case instr_type::HCF: break;
 			default: CLASS_ERROR << "Invalid instruction type"; break;
 		}
+	} else {
+		CLASS_INFO << "NOP";
 	}
 }
 

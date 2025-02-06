@@ -59,7 +59,7 @@ void DataMemory::processMemoryRequest(Request& _req) {
 	} else if (_req.type == Request::ReqType::WRITE) {
 		CLASS_INFO << "Write data 0x" << std::hex << &_req.data << " to memory at address = " << std::dec << _req.addr;
 		// Write data to memory
-		this->writeData(&_req.data, _req.addr, sizeof(uint32_t));
+		this->writeData(&_req.data, _req.addr, sizeof(uint8_t));
 		// Create MemRespPacket
 		auto resp_pkt = new MemRespPacket("MemRespPacket", 0);
 		// Send MemRespPacket to the MasterPort

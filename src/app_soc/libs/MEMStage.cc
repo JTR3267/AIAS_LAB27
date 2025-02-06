@@ -53,11 +53,14 @@ void MEMStage::execDataPath() {
 			} else {
 				// Check for data hazard
 				if (this->checkDataHazard(info->inst.a1.reg)) {
-					dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
-					dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
+					dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
+					dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 				}
 				this->checkMemoryAccess(info);
 			}
+		} else {
+			this->mem_wb_reg->set(nullptr);
+			CLASS_INFO << "NOP";
 		}
 	} else {
 		CLASS_ERROR << "Invalid MEMStage status";
@@ -125,9 +128,9 @@ bool MEMStage::checkDataHazard(int _rd) {
 
 void MEMStage::sendReqToMemory(MemReqPacket* _pkt) {
 	// Set IF, ID, EXE stage to stall
-	dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
-	dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
-	dynamic_cast<EXEStage*>(this->getSimulator()->getModule("EXEStage"))->setStall();
+	dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallMA();
+	dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallMA();
+	dynamic_cast<EXEStage*>(this->getSimulator()->getModule("EXEStage"))->setStallMA();
 	// Send the packet to the MasterPort
 	auto m_port = dynamic_cast<CPU*>(this->getSimulator())->getMasterPort();
 	if (m_port->isPushReady()) {

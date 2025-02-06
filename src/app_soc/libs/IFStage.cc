@@ -19,7 +19,12 @@
 #include "CPU.hh"
 
 IFStage::IFStage(const std::string& name, Register<if_stage_out>* _if_id_reg)
-    : acalsim::SimModule(name), if_id_reg(_if_id_reg), flush(false), stall(false), exe_next_pc{false, 0} {
+    : acalsim::SimModule(name),
+      if_id_reg(_if_id_reg),
+      flush(false),
+      stall_dh(false),
+      stall_ma(false),
+      exe_next_pc{false, 0} {
 	this->pc_reg = new Register<uint32_t>(std::make_shared<uint32_t>(0));
 }
 
@@ -32,7 +37,7 @@ void IFStage::step() {}
 void IFStage::execDataPath() {
 	uint32_t current_pc = *(this->pc_reg->get());
 	int      index      = current_pc / 4;
-	if (!this->flush && !this->stall) {
+	if (!this->flush && !this->stall_dh && !this->stall_ma) {
 		const instr& fetch_instr = dynamic_cast<CPU*>(this->getSimulator())->fetchInstr(index);
 		CLASS_INFO << "Process instruction at PC = " << current_pc;
 		std::shared_ptr<if_stage_out> infoPtr =
@@ -42,9 +47,11 @@ void IFStage::execDataPath() {
 	} else {
 		CLASS_INFO << "IFStage stall or flush";
 	}
-	if (this->exe_next_pc.first) {
-		this->pc_reg->set(std::make_shared<uint32_t>(this->exe_next_pc.second));
-	} else {
-		this->pc_reg->set(std::make_shared<uint32_t>(current_pc + 4));
+	if (!this->stall_dh && !this->stall_ma) {
+		if (this->exe_next_pc.first) {
+			this->pc_reg->set(std::make_shared<uint32_t>(this->exe_next_pc.second));
+		} else {
+			this->pc_reg->set(std::make_shared<uint32_t>(current_pc + 4));
+		}
 	}
 }

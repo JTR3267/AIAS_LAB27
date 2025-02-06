@@ -54,21 +54,21 @@ public:
 
 	void execDataPath();
 
-	bool getStallStatus() { return this->stall; }
+	bool getStallStatus() { return this->stall_ma; }
 
 	bool checkDataHazard(int _rd);
 
-	void updateStatus() { this->stall = false; }
+	void updateStatus() { this->stall_ma = false; }
 
-	void setStall() {
+	void setStallMA() {
 		this->exe_mem_reg->setStall();
-		this->stall = true;
+		this->stall_ma = true;
 	}
 
 private:
 	Register<id_stage_out>*  id_exe_reg;
 	Register<exe_stage_out>* exe_mem_reg;
-	bool                     stall;
+	bool                     stall_ma;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_EXESTAGE_HH_

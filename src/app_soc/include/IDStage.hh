@@ -55,16 +55,22 @@ public:
 
 	void execDataPath();
 
-	bool getStallStatus() { return this->stall; }
+	bool getStallStatus() { return this->stall_ma; }
 
 	std::shared_ptr<if_stage_out> getRegInfoFromID() { return this->if_id_reg->get(); }
 
 	void updateStatus() {
-		this->stall = false;
-		this->flush = false;
+		this->stall_dh = false;
+		this->stall_ma = false;
+		this->flush    = false;
 	}
 
-	void setStall() { this->stall = true; }
+	void setStallDH() { this->stall_dh = true; }
+
+	void setStallMA() {
+		this->stall_ma = true;
+		this->id_exe_reg->setStall();
+	}
 
 	void setFlush() {
 		this->id_exe_reg->setFlush();
@@ -75,7 +81,8 @@ private:
 	Register<if_stage_out>* if_id_reg;
 	Register<id_stage_out>* id_exe_reg;
 	bool                    flush;
-	bool                    stall;
+	bool                    stall_dh;
+	bool                    stall_ma;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_IDSTAGE_HH_

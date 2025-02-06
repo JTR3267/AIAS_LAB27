@@ -54,19 +54,25 @@ public:
 
 	void execDataPath();
 
-	bool getStallStatus() { return this->stall; }
+	bool getStallStatus() { return this->stall_ma; }
 
 	void updatePC() { this->pc_reg->update(); }
 
 	void updateStatus() {
-		this->stall = false;
-		this->flush = false;
+		this->stall_dh = false;
+		this->stall_ma = false;
+		this->flush    = false;
 	}
 
-	void setStall() {
+	void setStallDH() {
 		this->if_id_reg->setStall();
 		this->pc_reg->setStall();
-		this->stall = true;
+		this->stall_dh = true;
+	}
+	void setStallMA() {
+		this->if_id_reg->setStall();
+		this->pc_reg->setStall();
+		this->stall_ma = true;
 	}
 
 	void setFlush() {
@@ -79,7 +85,8 @@ private:
 	Register<uint32_t>*       pc_reg;
 	std::pair<bool, uint32_t> exe_next_pc;
 	bool                      flush;
-	bool                      stall;
+	bool                      stall_dh;
+	bool                      stall_ma;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_IFSTAGE_HH_

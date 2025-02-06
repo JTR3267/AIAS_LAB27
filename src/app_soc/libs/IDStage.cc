@@ -17,7 +17,12 @@
 #include "IDStage.hh"
 
 IDStage::IDStage(const std::string& name, Register<if_stage_out>* _if_id_reg, Register<id_stage_out>* _id_exe_reg)
-    : acalsim::SimModule(name), if_id_reg(_if_id_reg), id_exe_reg(_id_exe_reg), flush(false), stall(false) {}
+    : acalsim::SimModule(name),
+      if_id_reg(_if_id_reg),
+      id_exe_reg(_id_exe_reg),
+      flush(false),
+      stall_dh(false),
+      stall_ma(false) {}
 
 IDStage::~IDStage() {}
 
@@ -31,7 +36,7 @@ void IDStage::execDataPath() {
 
 	uint32_t rs1_data, rs2_data, immediate;
 
-	if (!this->flush && !this->stall) {
+	if (!this->flush && !this->stall_dh && !this->stall_ma) {
 		if (info) {
 			CLASS_INFO << "Process instruction at PC = " << info->pc;
 			switch (info->inst.op) {
@@ -116,7 +121,7 @@ void IDStage::execDataPath() {
 			                                                .immediate = immediate});
 			this->id_exe_reg->set(infoPtr);
 		}
-	} else if (this->stall) {
+	} else if (this->stall_dh) {
 		this->id_exe_reg->set(nullptr);
 	} else {
 		CLASS_INFO << "IDStage stall or flush";
