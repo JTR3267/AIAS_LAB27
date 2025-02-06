@@ -36,6 +36,7 @@ public:
 private:
 	enum class OutEntry { PING, PONG };
 
+	// Add write_en
 	OutEntry           state_;
 	bool               is_stall_;
 	bool               is_flush_;

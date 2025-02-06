@@ -54,10 +54,6 @@ public:
 
 	void execDataPath();
 
-	bool getStallStatus() { return this->stall_ma; }
-
-	bool checkDataHazard(int _rd);
-
 	void updateStatus() { this->stall_ma = false; }
 
 	void setStallMA() {

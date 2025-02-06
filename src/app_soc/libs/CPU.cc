@@ -38,9 +38,9 @@ CPU::CPU(const std::string& _name, const std::string& _m_port, const std::string
 	this->mem_wb_reg  = new Register<mem_stage_out>();
 
 	// Generate and Register MasterPorts
-	this->m_port_ = this->addMasterPort(_m_port);
+	this->m_port = this->addMasterPort(_m_port);
 	// Generate and Register SlavePorts
-	this->s_port_ = this->addSlavePort(_s_port, 1);
+	this->s_port = this->addSlavePort(_s_port, 1);
 }
 
 CPU::~CPU() {}
@@ -130,22 +130,20 @@ void CPU::updateStatus() {
 	dynamic_cast<IFStage*>(this->getModule("IFStage"))->updateStatus();
 	dynamic_cast<IDStage*>(this->getModule("IDStage"))->updateStatus();
 	dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->updateStatus();
+	dynamic_cast<MEMStage*>(this->getModule("MEMStage"))->updateStatus();
 }
 
 void CPU::updatePC() { dynamic_cast<IFStage*>(this->getModule("IFStage"))->updatePC(); }
 
 void CPU::checkNextCycleEvent() {
-	bool stall = dynamic_cast<IFStage*>(this->getModule("IFStage"))->getStallStatus() &&
-	             dynamic_cast<IDStage*>(this->getModule("IDStage"))->getStallStatus() &&
-	             dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->getStallStatus();
-	bool hcf = dynamic_cast<WBStage*>(this->getModule("WBStage"))->checkHcf();
-	if (!stall && !hcf) {
+	bool stall_ma = dynamic_cast<MEMStage*>(this->getModule("MEMStage"))->checkMemoryAccessStall();
+	bool hcf      = dynamic_cast<WBStage*>(this->getModule("WBStage"))->checkHcf();
+	if (!stall_ma && !hcf) {
 		auto rc    = acalsim::top->getRecycleContainer();
 		auto event = rc->acquire<CPUSingleIterationEvent>(&CPUSingleIterationEvent::renew, this);
 		this->scheduleEvent(event, acalsim::top->getGlobalTick() + 1);
 	} else if (hcf) {
 		CLASS_INFO << "HCF instruction detected in WB stage. Simulation ends.";
-		this->printRegfile();
 	}
 }
 
@@ -216,8 +214,8 @@ void CPU::updateSystemStates() {
 }
 
 void CPU::step() {
-	if (this->s_port_->isPopValid()) {
-		auto packet = this->s_port_->pop();
+	if (this->s_port->isPopValid()) {
+		auto packet = this->s_port->pop();
 		this->accept(acalsim::top->getGlobalTick(), *packet);
 	}
 }
@@ -233,4 +231,7 @@ void CPU::handler(MemRespPacket* _pkt) {
 	CLASS_INFO << "-----------------------";
 }
 
-void CPU::cleanup() {}
+void CPU::cleanup() {
+	this->printRegfile();
+	// Print statistics
+}

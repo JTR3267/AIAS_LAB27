@@ -66,7 +66,9 @@ public:
 
 	void checkMemoryAccess(std::shared_ptr<exe_stage_out> _info);
 
-	bool checkDataHazard(int _rd);
+	bool checkMemoryAccessStall() { return this->status == mem_stage_status::WAIT; }
+
+	void updateStatus() { this->stall_ma = false; }
 
 	void sendReqToMemory(MemReqPacket* _pkt);
 
@@ -77,6 +79,7 @@ private:
 	Register<mem_stage_out>* mem_wb_reg;
 	MemRespPacket*           resp_pkt;
 	mem_stage_status         status = mem_stage_status::IDLE;
+	bool                     stall_ma;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_MEMSTAGE_HH_

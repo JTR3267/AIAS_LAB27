@@ -54,8 +54,6 @@ public:
 
 	void execDataPath();
 
-	bool getStallStatus() { return this->stall_ma; }
-
 	void updatePC() { this->pc_reg->update(); }
 
 	void setExeNextPC(std::pair<bool, uint32_t> _exe_next_pc) { this->exe_next_pc = _exe_next_pc; }
@@ -72,6 +70,7 @@ public:
 		this->pc_reg->setStall();
 		this->stall_dh = true;
 	}
+
 	void setStallMA() {
 		this->if_id_reg->setStall();
 		this->pc_reg->setStall();
