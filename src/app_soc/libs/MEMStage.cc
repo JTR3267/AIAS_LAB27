@@ -38,11 +38,19 @@ void MEMStage::execDataPath() {
 			auto info  = std::make_shared<mem_stage_out>();
 			info->pc   = this->exe_mem_reg->get()->pc;
 			info->inst = this->exe_mem_reg->get()->inst;
+			CLASS_INFO << "Process instruction at PC = " << info->pc << ", inst = " << info->inst.op;
 			CLASS_INFO << "Data = 0x" << std::hex << this->resp_pkt->getData();
 			info->mem_val = {.load_data = this->resp_pkt->getData()};
 			this->mem_wb_reg->set(info);
 			// Set the status to IDLE
 			this->setStatus(mem_stage_status::IDLE);
+			// Check for data hazard
+			auto cpu = dynamic_cast<CPU*>(this->getSimulator());
+			if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "MEMStage")) {
+				CLASS_INFO << "Data hazard detected in MEMStage";
+				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
+				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
+			}
 		}
 	} else if (this->status == mem_stage_status::IDLE) {
 		auto info = this->exe_mem_reg->get();
@@ -55,7 +63,7 @@ void MEMStage::execDataPath() {
 				// Check for data hazard
 				auto cpu = dynamic_cast<CPU*>(this->getSimulator());
 				if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "MEMStage")) {
-					CLASS_INFO << "Data hazard detected in EXEStage";
+					CLASS_INFO << "Data hazard detected in MEMStage";
 					dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 					dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 				}

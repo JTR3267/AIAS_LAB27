@@ -125,7 +125,7 @@ void IDStage::execDataPath() {
 			this->id_exe_reg->set(nullptr);
 			CLASS_INFO << "NOP";
 		}
-	} else if (this->stall_dh || this->flush) {
+	} else if (this->stall_dh) {
 		this->id_exe_reg->set(nullptr);
 	}
 

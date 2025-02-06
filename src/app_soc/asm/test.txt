@@ -14,10 +14,15 @@
 
 ## RV32 Emulator Testing Assembly Code
 
+# ===================================================================
+# If the register a0(x10) is zero, it means all tests pass (a0 = 0x00000000).
+# If the register a0(x10) is non-zero, its value indicates the failing test number.
+# ===================================================================
+
 .data
-data1:  .word  0
-data2:  .word  0
 data9:  .word  0x66
+data1:  .word  0x0
+data2:  .word  0x0
 
 .text
 

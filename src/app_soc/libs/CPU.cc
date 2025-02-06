@@ -201,7 +201,7 @@ bool CPU::checkDataHazard(int _rd, std::string _stage) {
 			break;
 	}
 	if (id_reg) {
-		CLASS_INFO << _stage << " detect rd = " << _rd << " rs1 = " << rs1 << " rs2 = " << rs2;
+		CLASS_INFO << "Detect IDStage rd = " << _rd << ", " << _stage << " rs1 = " << rs1 << " rs2 = " << rs2;
 		return (_rd == rs1 || _rd == rs2) && (_rd != 0);
 	}
 	return false;
@@ -226,9 +226,11 @@ void CPU::handler(MemRespPacket* _pkt) {
 	// Update the state of MEM stage about the received packet
 	dynamic_cast<MEMStage*>(this->getModule("MEMStage"))->setRespPkt(_pkt);
 
+	CLASS_INFO << "----------- MemRespPacket received at CPU -----------";
 	// Run the internal logic of all stages
 	this->execDataPath();
 	this->updateSystemStates();
+	CLASS_INFO << "-----------------------";
 }
 
 void CPU::cleanup() {}
