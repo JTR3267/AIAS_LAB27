@@ -84,6 +84,7 @@ void IDStage::execDataPath() {
 					rs1_data  = cpu->readRegister(info->inst.a1.reg);
 					rs2_data  = cpu->readRegister(info->inst.a2.reg);
 					immediate = info->inst.a3.imm;
+					CLASS_INFO << "RS1 data = " << rs1_data << ", RS2 data = " << rs2_data;
 					break;
 				case LW:
 					rs1_data  = 0;
@@ -120,10 +121,15 @@ void IDStage::execDataPath() {
 			                                                .rs2_data  = rs2_data,
 			                                                .immediate = immediate});
 			this->id_exe_reg->set(infoPtr);
+		} else {
+			this->id_exe_reg->set(nullptr);
+			CLASS_INFO << "NOP";
 		}
-	} else if (this->stall_dh) {
+	} else if (this->stall_dh || this->flush) {
 		this->id_exe_reg->set(nullptr);
-	} else {
-		CLASS_INFO << "IDStage stall or flush";
 	}
+
+	if (this->flush) CLASS_INFO << "IDStage flush";
+	if (this->stall_dh) CLASS_INFO << "IDStage stall due to data hazard";
+	if (this->stall_ma) CLASS_INFO << "IDStage stall due to memory access";
 }

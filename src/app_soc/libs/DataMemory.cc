@@ -50,16 +50,31 @@ void DataMemory::processMemoryRequest(Request& _req) {
 	CLASS_INFO << "Finish Memory Process at Cycle = " << acalsim::top->getGlobalTick();
 	// Check Request type
 	if (_req.type == Request::ReqType::READ) {
+		MemRespPacket* resp_pkt;
 		// Read data from memory
-		auto data_ptr = (uint32_t*)this->readData(_req.addr, sizeof(uint32_t), true);
-		// Create MemRespPacket
-		auto resp_pkt = new MemRespPacket("MemRespPacket", data_ptr[0]);
+		switch (_req.size) {
+			case Request::ReqSize::WORD: {
+				auto data_ptr = (uint32_t*)this->readData(_req.addr, sizeof(uint32_t), true);
+				CLASS_INFO << "Read data " << data_ptr[0] << " from memory at address = " << std::dec << _req.addr;
+				// Create MemRespPacket
+				resp_pkt = new MemRespPacket("MemRespPacket", data_ptr[0]);
+				break;
+			}
+			default: CLASS_ERROR << "Invalid StrbType detected in DataMemory"; break;
+		}
 		// Send MemRespPacket to the MasterPort
 		this->m_port_->push(resp_pkt);
 	} else if (_req.type == Request::ReqType::WRITE) {
-		CLASS_INFO << "Write data 0x" << std::hex << &_req.data << " to memory at address = " << std::dec << _req.addr;
 		// Write data to memory
-		this->writeData(&_req.data, _req.addr, sizeof(uint8_t));
+		switch (_req.size) {
+			case Request::ReqSize::BYTE: {
+				this->writeData(_req.data, _req.addr, sizeof(uint8_t));
+				CLASS_INFO << "Write data 0x" << std::hex << *_req.data << " to memory at address = " << std::dec
+				           << _req.addr;
+				break;
+			}
+			default: CLASS_ERROR << "Invalid StrbType detected in DataMemory"; break;
+		}
 		// Create MemRespPacket
 		auto resp_pkt = new MemRespPacket("MemRespPacket", 0);
 		// Send MemRespPacket to the MasterPort
@@ -77,7 +92,8 @@ void DataMemory::reqPacketHandler(MemReqPacket* _pkt) {
 		auto process_event = new MemProcessEvent(this, req);
 		this->scheduleEvent(process_event, acalsim::top->getGlobalTick() + read_latency);
 	} else if (req.type == Request::ReqType::WRITE) {
-		CLASS_INFO << "Detect Write Request";
+		CLASS_INFO << "Detect Write Request "
+		           << ", Data = 0x" << std::hex << *req.data;
 		auto write_latency = acalsim::top->getParameter<acalsim::Tick>("SOC", "memory_write_latency");
 		auto process_event = new MemProcessEvent(this, req);
 		this->scheduleEvent(process_event, acalsim::top->getGlobalTick() + write_latency);

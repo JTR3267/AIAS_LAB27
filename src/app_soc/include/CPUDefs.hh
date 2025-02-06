@@ -131,7 +131,8 @@ typedef struct {
 } exe_stage_out;
 
 typedef struct {
-	instr inst;
+	uint32_t pc;  // for logging
+	instr    inst;
 	union {
 		uint32_t pc_plus_4_to_rd;
 		uint32_t alu_out;

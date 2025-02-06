@@ -31,15 +31,16 @@ void WBStage::step() {}
 void WBStage::execDataPath() {
 	auto info = this->mem_wb_reg->get();
 	if (info) {
-		CLASS_INFO << "Process instruction : " << info->inst.op;
+		CLASS_INFO << "Process instruction at PC = " << info->pc << ", inst = " << info->inst.op;
 		// Check for data hazard
-		if (this->checkDataHazard(info->inst.a1.reg)) {
+		auto cpu = dynamic_cast<CPU*>(this->getSimulator());
+		if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "WBStage")) {
+			CLASS_INFO << "Data hazard detected in EXEStage";
 			dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 			dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 		}
 		// Write back to the register file
 		auto inst_type = info->inst.op;
-		auto cpu       = dynamic_cast<CPU*>(this->getSimulator());
 		switch (inst_type) {
 			case instr_type::LW: {
 				cpu->writeRegister(info->inst.a1.reg, info->mem_val.load_data);
@@ -51,7 +52,6 @@ void WBStage::execDataPath() {
 			}
 			case instr_type::ADD:
 			case instr_type::ADDI:
-			case instr_type::AUIPC:
 			case instr_type::LUI: {
 				cpu->writeRegister(info->inst.a1.reg, info->mem_val.alu_out);
 				break;
@@ -64,18 +64,6 @@ void WBStage::execDataPath() {
 	} else {
 		CLASS_INFO << "NOP";
 	}
-}
-
-bool WBStage::checkDataHazard(int _rd) {
-	// Get rs1 and rs2 from the ID stage inbound register
-	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
-	int  rs1    = id_reg->inst.a2.reg;
-	int  rs2    = id_reg->inst.a3.reg;
-	if (id_reg) {
-		CLASS_INFO << "Exe detect rd = " << _rd << " rs1 = " << rs1 << " rs2 = " << rs2;
-		return (_rd == rs1 || _rd == rs2) && (_rd != 0);
-	}
-	return false;
 }
 
 bool WBStage::checkHcf() {

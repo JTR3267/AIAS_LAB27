@@ -44,14 +44,17 @@ void IFStage::execDataPath() {
 		    std::make_shared<if_stage_out>(if_stage_out{.pc = current_pc, .inst = fetch_instr});
 
 		this->if_id_reg->set(infoPtr);
-	} else {
-		CLASS_INFO << "IFStage stall or flush";
 	}
-	if (!this->stall_dh && !this->stall_ma) {
+	if ((!this->stall_dh && !this->stall_ma) || this->flush) {
 		if (this->exe_next_pc.first) {
+			CLASS_INFO << "Fetch jump PC = " << this->exe_next_pc.second;
 			this->pc_reg->set(std::make_shared<uint32_t>(this->exe_next_pc.second));
 		} else {
+			CLASS_INFO << "Fetch PC + 4 = " << current_pc + 4;
 			this->pc_reg->set(std::make_shared<uint32_t>(current_pc + 4));
 		}
 	}
+	if (this->flush) CLASS_INFO << "IFStage flush";
+	if (this->stall_dh) CLASS_INFO << "IFStage stall due to data hazard";
+	if (this->stall_ma) CLASS_INFO << "IFStage stall due to memory access";
 }

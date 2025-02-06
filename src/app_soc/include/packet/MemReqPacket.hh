@@ -23,9 +23,11 @@
 
 struct Request {
 	enum class ReqType { READ, WRITE };
-	uint32_t addr;
-	uint32_t data;
-	ReqType  type;
+	enum class ReqSize { BYTE, HALF, WORD };
+	uint32_t  addr;
+	uint32_t* data;
+	ReqType   type;
+	ReqSize   size;
 };
 
 class MemReqPacket : public acalsim::SimPacket {

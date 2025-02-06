@@ -58,10 +58,13 @@ public:
 
 	void updatePC() { this->pc_reg->update(); }
 
+	void setExeNextPC(std::pair<bool, uint32_t> _exe_next_pc) { this->exe_next_pc = _exe_next_pc; }
+
 	void updateStatus() {
-		this->stall_dh = false;
-		this->stall_ma = false;
-		this->flush    = false;
+		this->stall_dh    = false;
+		this->stall_ma    = false;
+		this->flush       = false;
+		this->exe_next_pc = {false, 0};
 	}
 
 	void setStallDH() {

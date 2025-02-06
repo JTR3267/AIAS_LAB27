@@ -115,6 +115,10 @@ public:
 
 	acalsim::MasterPort* getMasterPort() { return this->m_port_; }
 
+	int getDestReg(const instr& _inst);
+
+	bool checkDataHazard(int _rd, std::string _stage);
+
 	void handler(MemRespPacket* _pkt);
 
 private:

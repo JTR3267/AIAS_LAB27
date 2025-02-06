@@ -16,6 +16,7 @@
 
 #include "EXEStage.hh"
 
+#include "CPU.hh"
 #include "IDStage.hh"
 #include "IFStage.hh"
 
@@ -33,7 +34,9 @@ void EXEStage::execDataPath() {
 		auto info = this->id_exe_reg->get();
 		if (info) {
 			// Check for data hazard
-			if (this->checkDataHazard(info->inst.a1.reg)) {
+			auto cpu = dynamic_cast<CPU*>(this->getSimulator());
+			if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "EXEStage")) {
+				CLASS_INFO << "Data hazard detected in EXEStage";
 				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 			}
@@ -54,10 +57,11 @@ void EXEStage::execDataPath() {
 					write_data_ = 0;
 					break;
 				case BEQ:
-					branch_compare.first  = info->rs1_data == info->rs2_data;
+					branch_compare.first  = (info->rs1_data == info->rs2_data);
 					branch_compare.second = info->immediate;
 					write_data_           = 0;
 					alu_out_              = 0;
+					CLASS_INFO << "Detect branch compare instruction, result = " << branch_compare.first;
 					break;
 				case JAL:
 					branch_compare.first  = true;
@@ -68,6 +72,7 @@ void EXEStage::execDataPath() {
 				case SB:
 					alu_out_    = info->rs2_data + info->immediate;
 					write_data_ = info->rs1_data & 0x000000FF;
+					CLASS_INFO << "RS1 data = " << info->rs1_data << ", Write data = " << write_data_;
 					break;
 				case LW:
 					alu_out_    = info->rs2_data + info->immediate;
@@ -79,7 +84,9 @@ void EXEStage::execDataPath() {
 					break;
 			}
 			if (branch_compare.first) {
-				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setFlush();
+				auto if_stage = dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"));
+				if_stage->setExeNextPC(std::make_pair(true, branch_compare.second));
+				if_stage->setFlush();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setFlush();
 			}
 			std::shared_ptr<exe_stage_out> infoPtr = std::make_shared<exe_stage_out>(
@@ -89,17 +96,7 @@ void EXEStage::execDataPath() {
 			this->exe_mem_reg->set(nullptr);
 			CLASS_INFO << "NOP";
 		}
+	} else {
+		CLASS_INFO << "EXEStage stall due to memory access";
 	}
-}
-
-bool EXEStage::checkDataHazard(int _rd) {
-	// Get rs1 and rs2 from the ID stage inbound register
-	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
-	int  rs1    = id_reg->inst.a2.reg;
-	int  rs2    = id_reg->inst.a3.reg;
-	if (id_reg) {
-		CLASS_INFO << "Exe detect rd = " << _rd << " rs1 = " << rs1 << " rs2 = " << rs2;
-		return (_rd == rs1 || _rd == rs2) && (_rd != 0);
-	}
-	return false;
 }

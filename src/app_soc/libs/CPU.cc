@@ -149,6 +149,64 @@ void CPU::checkNextCycleEvent() {
 	}
 }
 
+int CPU::getDestReg(const instr& _inst) {
+	auto type = _inst.op;
+	int  rd;
+	switch (type) {
+		case ADD:
+		case ADDI:
+		case LW:
+		case LUI:
+		case JAL: rd = _inst.a1.reg; break;
+		case BEQ:
+		case SB:
+		default: rd = 0; break;
+	}
+	return rd;
+}
+
+bool CPU::checkDataHazard(int _rd, std::string _stage) {
+	// Get rs1 and rs2 from the ID stage inbound register
+	auto id_reg = dynamic_cast<IDStage*>(this->getModule("IDStage"))->getRegInfoFromID();
+	if (!id_reg) return false;
+	auto type = id_reg->inst.op;
+	int  rs1;
+	int  rs2;
+	switch (type) {
+		case ADD:
+			rs1 = id_reg->inst.a2.reg;
+			rs2 = id_reg->inst.a3.reg;
+			break;
+		case ADDI:
+			rs1 = id_reg->inst.a2.reg;
+			rs2 = 0;
+			break;
+		case BEQ:
+			rs1 = id_reg->inst.a1.reg;
+			rs2 = id_reg->inst.a2.reg;
+			break;
+		case SB:
+			rs1 = id_reg->inst.a3.reg;
+			rs2 = id_reg->inst.a1.reg;
+			break;
+		case LW:
+			rs1 = id_reg->inst.a3.reg;
+			rs2 = 0;
+			break;
+		case LUI:
+		case JAL:
+		default:
+			rs1 = 0;
+			rs2 = 0;
+			break;
+	}
+	if (id_reg) {
+		CLASS_INFO << _stage << " detect rd = " << _rd << " rs1 = " << rs1 << " rs2 = " << rs2;
+		return (_rd == rs1 || _rd == rs2) && (_rd != 0);
+	}
+	return false;
+}
+
 void CPU::updateSystemStates() {
 	this->checkNextCycleEvent();
 	this->updateStatus();
