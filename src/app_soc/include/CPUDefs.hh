@@ -140,4 +140,15 @@ typedef struct {
 	} mem_val;
 } mem_stage_out;
 
+class PerfCounter {
+public:
+	// Get the performance counter value by name (CPU API)
+
+	// Add a new performance counter
+	// API to plus 1
+	// API to plus more than 1
+	// Log the counter value in one line
+private:
+}
+
 #endif

@@ -152,6 +152,8 @@ private:
 	ChromeTraceData* exe_trace_data;
 	ChromeTraceData* mem_trace_data;
 	ChromeTraceData* wb_trace_data;
+	// Performance Counter
+	std::unordered_map<std::string, PerfCounter> counters;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_CPU_HH_
