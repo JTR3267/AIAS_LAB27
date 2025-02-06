@@ -52,7 +52,7 @@ void MEMStage::execDataPath() {
 				this->checkMemoryAccess(info);
 			} else {
 				// Check for data hazard
-				if (this->checkDataHazard(info->inst.a2.reg, info->inst.a3.reg)) {
+				if (this->checkDataHazard(info->inst.a1.reg)) {
 					dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
 					dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
 				}
@@ -111,12 +111,14 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 	}
 }
 
-bool MEMStage::checkDataHazard(int _rs1, int _rs2) {
+bool MEMStage::checkDataHazard(int _rd) {
 	// Get rs1 and rs2 from the ID stage inbound register
 	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
+	int  rs1    = id_reg->inst.a2.reg;
+	int  rs2    = id_reg->inst.a3.reg;
 	if (id_reg) {
-		auto rd = id_reg->inst.a1.reg;
-		return (rd == _rs1 || rd == _rs2) && (rd != 0);
+		CLASS_INFO << "Exe detect rd = " << _rd << " rs1 = " << rs1 << " rs2 = " << rs2;
+		return (_rd == rs1 || _rd == rs2) && (_rd != 0);
 	}
 	return false;
 }

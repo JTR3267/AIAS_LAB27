@@ -64,10 +64,7 @@ public:
 		this->flush = false;
 	}
 
-	void setStall() {
-		this->id_exe_reg->setStall();
-		this->stall = true;
-	}
+	void setStall() { this->stall = true; }
 
 	void setFlush() {
 		this->id_exe_reg->setFlush();

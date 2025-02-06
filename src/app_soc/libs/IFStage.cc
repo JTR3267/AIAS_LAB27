@@ -39,6 +39,8 @@ void IFStage::execDataPath() {
 		    std::make_shared<if_stage_out>(if_stage_out{.pc = current_pc, .inst = fetch_instr});
 
 		this->if_id_reg->set(infoPtr);
+	} else {
+		CLASS_INFO << "IFStage stall or flush";
 	}
 	if (this->exe_next_pc.first) {
 		this->pc_reg->set(std::make_shared<uint32_t>(this->exe_next_pc.second));

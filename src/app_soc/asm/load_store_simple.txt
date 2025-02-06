@@ -20,8 +20,7 @@ data:
 
 .text
 la      t0, data
-lh      t1, 0(t0)
-addi    t2, x0, 9
-sb      t2, 2(t0)
-lw      t3, 0(t0)
+## addi    t2, x0, 9
+## sb      t2, 2(t0)
+## lw      t3, 0(t0)
 hcf

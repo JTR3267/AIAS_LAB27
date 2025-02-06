@@ -140,7 +140,6 @@ void CPU::checkNextCycleEvent() {
 	             dynamic_cast<EXEStage*>(this->getModule("EXEStage"))->getStallStatus();
 	bool hcf = dynamic_cast<WBStage*>(this->getModule("WBStage"))->checkHcf();
 	if (!stall && !hcf) {
-		CLASS_INFO << "Stall = " << stall << ", HCF = " << hcf;
 		auto rc    = acalsim::top->getRecycleContainer();
 		auto event = rc->acquire<CPUSingleIterationEvent>(&CPUSingleIterationEvent::renew, this);
 		this->scheduleEvent(event, acalsim::top->getGlobalTick() + 1);

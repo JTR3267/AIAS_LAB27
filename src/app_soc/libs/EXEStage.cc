@@ -30,47 +30,47 @@ void EXEStage::step() {}
 
 void EXEStage::execDataPath() {
 	if (!this->stall) {
-		auto id_stage_out = this->id_exe_reg->get();
-		if (id_stage_out) {
+		auto info = this->id_exe_reg->get();
+		if (info) {
 			// Check for data hazard
-			if (this->checkDataHazard(id_stage_out->inst.a2.reg, id_stage_out->inst.a3.reg)) {
+			if (this->checkDataHazard(info->inst.a1.reg)) {
 				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStall();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStall();
 			}
-			CLASS_INFO << "Process instruction at PC = " << id_stage_out->pc;
+			CLASS_INFO << "Process instruction at PC = " << info->pc;
 			uint32_t                  alu_out_, write_data_;
 			std::pair<bool, uint32_t> branch_compare;
-			switch (id_stage_out->inst.op) {
+			switch (info->inst.op) {
 				case ADD:
-					alu_out_    = id_stage_out->rs1_data + id_stage_out->rs2_data;
+					alu_out_    = info->rs1_data + info->rs2_data;
 					write_data_ = 0;
 					break;
 				case ADDI:
-					alu_out_    = id_stage_out->rs2_data + id_stage_out->immediate;
+					alu_out_    = info->rs2_data + info->immediate;
 					write_data_ = 0;
 					break;
 				case LUI:
-					alu_out_    = id_stage_out->immediate << 12;
+					alu_out_    = info->immediate << 12;
 					write_data_ = 0;
 					break;
 				case BEQ:
-					branch_compare.first  = id_stage_out->rs1_data == id_stage_out->rs2_data;
-					branch_compare.second = id_stage_out->immediate;
+					branch_compare.first  = info->rs1_data == info->rs2_data;
+					branch_compare.second = info->immediate;
 					write_data_           = 0;
 					alu_out_              = 0;
 					break;
 				case JAL:
 					branch_compare.first  = true;
-					branch_compare.second = id_stage_out->immediate;
+					branch_compare.second = info->immediate;
 					write_data_           = 0;
 					alu_out_              = 0;
 					break;
 				case SB:
-					alu_out_    = id_stage_out->rs2_data + id_stage_out->immediate;
-					write_data_ = id_stage_out->rs1_data;
+					alu_out_    = info->rs2_data + info->immediate;
+					write_data_ = info->rs1_data & 0xFF;
 					break;
 				case LW:
-					alu_out_    = id_stage_out->rs2_data + id_stage_out->immediate;
+					alu_out_    = info->rs2_data + info->immediate;
 					write_data_ = 0;
 					break;
 				default:
@@ -82,19 +82,21 @@ void EXEStage::execDataPath() {
 				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setFlush();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setFlush();
 			}
-			std::shared_ptr<exe_stage_out> infoPtr = std::make_shared<exe_stage_out>(exe_stage_out{
-			    .pc = id_stage_out->pc, .inst = id_stage_out->inst, .alu_out = alu_out_, .write_data = write_data_});
+			std::shared_ptr<exe_stage_out> infoPtr = std::make_shared<exe_stage_out>(
+			    exe_stage_out{.pc = info->pc, .inst = info->inst, .alu_out = alu_out_, .write_data = write_data_});
 			this->exe_mem_reg->set(infoPtr);
 		}
 	}
 }
 
-bool EXEStage::checkDataHazard(int _rs1, int _rs2) {
+bool EXEStage::checkDataHazard(int _rd) {
 	// Get rs1 and rs2 from the ID stage inbound register
 	auto id_reg = dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->getRegInfoFromID();
+	int  rs1    = id_reg->inst.a2.reg;
+	int  rs2    = id_reg->inst.a3.reg;
 	if (id_reg) {
-		auto rd = id_reg->inst.a1.reg;
-		return (rd == _rs1 || rd == _rs2) && (rd != 0);
+		CLASS_INFO << "Exe detect rd = " << _rd << " rs1 = " << rs1 << " rs2 = " << rs2;
+		return (_rd == rs1 || _rd == rs2) && (_rd != 0);
 	}
 	return false;
 }

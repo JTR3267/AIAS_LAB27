@@ -56,7 +56,7 @@ public:
 
 	bool getStallStatus() { return this->stall; }
 
-	bool checkDataHazard(int _rs1, int _rs2);
+	bool checkDataHazard(int _rd);
 
 	void updateStatus() { this->stall = false; }
 

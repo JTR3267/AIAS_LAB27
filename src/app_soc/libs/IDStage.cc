@@ -26,15 +26,15 @@ void IDStage::init() { CLASS_INFO << "IDStage Initialization"; }
 void IDStage::step() {}
 
 void IDStage::execDataPath() {
-	auto if_stage_out = this->if_id_reg->get();
-	auto cpu          = dynamic_cast<CPU*>(this->getSimulator());
+	auto info = this->if_id_reg->get();
+	auto cpu  = dynamic_cast<CPU*>(this->getSimulator());
 
 	uint32_t rs1_data, rs2_data, immediate;
 
 	if (!this->flush && !this->stall) {
-		if (if_stage_out) {
-			CLASS_INFO << "Process instruction at PC = " << if_stage_out->pc;
-			switch (if_stage_out->inst.op) {
+		if (info) {
+			CLASS_INFO << "Process instruction at PC = " << info->pc;
+			switch (info->inst.op) {
 				case ADD:
 				case SUB:
 				case SLT:
@@ -45,8 +45,8 @@ void IDStage::execDataPath() {
 				case SLL:
 				case SRL:
 				case SRA:
-					rs1_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
-					rs2_data  = cpu->readRegister(if_stage_out->inst.a3.reg);
+					rs1_data  = cpu->readRegister(info->inst.a2.reg);
+					rs2_data  = cpu->readRegister(info->inst.a3.reg);
 					immediate = 0;
 					break;
 
@@ -60,8 +60,8 @@ void IDStage::execDataPath() {
 				case SRLI:
 				case SRAI:
 					rs1_data  = 0;
-					rs2_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
-					immediate = if_stage_out->inst.a3.imm;
+					rs2_data  = cpu->readRegister(info->inst.a2.reg);
+					immediate = info->inst.a3.imm;
 					break;
 
 				case BEQ:
@@ -70,30 +70,30 @@ void IDStage::execDataPath() {
 				case BLT:
 				case BLTU:
 				case BNE:
-					rs1_data  = cpu->readRegister(if_stage_out->inst.a1.reg);
-					rs2_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
-					immediate = if_stage_out->inst.a3.imm;
+					rs1_data  = cpu->readRegister(info->inst.a1.reg);
+					rs2_data  = cpu->readRegister(info->inst.a2.reg);
+					immediate = info->inst.a3.imm;
 					break;
 
 				case SB:
-					rs1_data  = cpu->readRegister(if_stage_out->inst.a1.reg);
-					rs2_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
-					immediate = if_stage_out->inst.a3.imm;
+					rs1_data  = cpu->readRegister(info->inst.a1.reg);
+					rs2_data  = cpu->readRegister(info->inst.a2.reg);
+					immediate = info->inst.a3.imm;
 					break;
 				case LW:
 					rs1_data  = 0;
-					rs2_data  = cpu->readRegister(if_stage_out->inst.a2.reg);
-					immediate = if_stage_out->inst.a3.imm;
+					rs2_data  = cpu->readRegister(info->inst.a2.reg);
+					immediate = info->inst.a3.imm;
 					break;
 				case JALR:
 					rs1_data  = 0;
-					rs2_data  = if_stage_out->inst.a2.reg;
-					immediate = if_stage_out->inst.a3.imm;
+					rs2_data  = info->inst.a2.reg;
+					immediate = info->inst.a3.imm;
 					break;
 				case LUI:
 					rs1_data  = 0;
 					rs2_data  = 0;
-					immediate = if_stage_out->inst.a2.imm;
+					immediate = info->inst.a2.imm;
 					break;
 				case HCF:
 					CLASS_INFO << "Encountered HCF!";
@@ -109,12 +109,16 @@ void IDStage::execDataPath() {
 					break;
 			}
 			std::shared_ptr<id_stage_out> infoPtr =
-			    std::make_shared<id_stage_out>(id_stage_out{.pc        = if_stage_out->pc,
-			                                                .inst      = if_stage_out->inst,
+			    std::make_shared<id_stage_out>(id_stage_out{.pc        = info->pc,
+			                                                .inst      = info->inst,
 			                                                .rs1_data  = rs1_data,
 			                                                .rs2_data  = rs2_data,
 			                                                .immediate = immediate});
 			this->id_exe_reg->set(infoPtr);
 		}
+	} else if (this->stall) {
+		this->id_exe_reg->set(nullptr);
+	} else {
+		CLASS_INFO << "IDStage stall or flush";
 	}
 }

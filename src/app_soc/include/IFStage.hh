@@ -65,6 +65,7 @@ public:
 
 	void setStall() {
 		this->if_id_reg->setStall();
+		this->pc_reg->setStall();
 		this->stall = true;
 	}
 
