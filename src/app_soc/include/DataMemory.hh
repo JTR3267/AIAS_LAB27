@@ -73,8 +73,8 @@ public:
 	void cleanup() override;
 
 private:
-	acalsim::MasterPort* m_port_;
-	acalsim::SlavePort*  s_port_;
+	acalsim::MasterPort* m_port;
+	acalsim::SlavePort*  s_port;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_DATAMEMORY_HH_

@@ -55,8 +55,6 @@ public:
 
 	void execDataPath();
 
-	bool getStallStatus() { return this->stall_ma; }
-
 	void updatePC() { this->pc_reg->update(); }
 
 	uint32_t getCurPC() { return *(this->pc_reg->get()); }
@@ -77,6 +75,7 @@ public:
 		this->pc_reg->setStall();
 		this->stall_dh = true;
 	}
+
 	void setStallMA() {
 		this->if_id_reg->setStall();
 		this->pc_reg->setStall();

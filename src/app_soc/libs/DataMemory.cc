@@ -19,9 +19,9 @@
 DataMemory::DataMemory(const std::string& name, size_t _size, const std::string& _m_port, const std::string& _s_port)
     : acalsim::CPPSimBase(name), BaseMemory(_size) {
 	// Generate and Register MasterPorts
-	this->m_port_ = this->addMasterPort(_m_port);
+	this->m_port = this->addMasterPort(_m_port);
 	// Generate and Register SlavePorts
-	this->s_port_ = this->addSlavePort(_s_port, 1);
+	this->s_port = this->addSlavePort(_s_port, 1);
 }
 
 DataMemory::~DataMemory(){};
@@ -38,8 +38,8 @@ void DataMemory::registerModules() {
 }
 
 void DataMemory::step() {
-	if (this->s_port_->isPopValid()) {
-		auto packet = this->s_port_->pop();
+	if (this->s_port->isPopValid()) {
+		auto packet = this->s_port->pop();
 		this->accept(acalsim::top->getGlobalTick(), *packet);
 	}
 }
@@ -47,7 +47,7 @@ void DataMemory::step() {
 void DataMemory::cleanup() {}
 
 void DataMemory::processMemoryRequest(Request& _req) {
-	CLASS_INFO << "Finish Memory Process at Cycle = " << acalsim::top->getGlobalTick();
+	CLASS_INFO << "Finish Memory Process at Tick = " << acalsim::top->getGlobalTick();
 	// Check Request type
 	if (_req.type == Request::ReqType::READ) {
 		MemRespPacket* resp_pkt;
@@ -63,7 +63,7 @@ void DataMemory::processMemoryRequest(Request& _req) {
 			default: CLASS_ERROR << "Invalid StrbType detected in DataMemory"; break;
 		}
 		// Send MemRespPacket to the MasterPort
-		this->m_port_->push(resp_pkt);
+		this->m_port->push(resp_pkt);
 	} else if (_req.type == Request::ReqType::WRITE) {
 		// Write data to memory
 		switch (_req.size) {
@@ -78,12 +78,12 @@ void DataMemory::processMemoryRequest(Request& _req) {
 		// Create MemRespPacket
 		auto resp_pkt = new MemRespPacket("MemRespPacket", 0);
 		// Send MemRespPacket to the MasterPort
-		this->m_port_->push(resp_pkt);
+		this->m_port->push(resp_pkt);
 	}
 }
 
 void DataMemory::reqPacketHandler(MemReqPacket* _pkt) {
-	CLASS_INFO << "Memory Receive Request at Cycle = " << acalsim::top->getGlobalTick();
+	CLASS_INFO << "Memory Receive Request at Tick = " << acalsim::top->getGlobalTick();
 	auto req = _pkt->getRequest();
 	// Check Request type
 	if (req.type == Request::ReqType::READ) {

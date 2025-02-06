@@ -32,7 +32,7 @@ void MEMStage::init() { CLASS_INFO << "MEMStage Initialization"; }
 void MEMStage::step() {}
 
 void MEMStage::execDataPath() {
-	if (this->status == mem_stage_status::WAIT) {
+	if (this->status == mem_stage_status::WAIT || this->stall_ma) {
 		if (this->resp_pkt) {
 			// Send the data to the WB stage
 			auto info  = std::make_shared<mem_stage_out>();
@@ -134,7 +134,8 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 }
 
 void MEMStage::sendReqToMemory(MemReqPacket* _pkt) {
-	// Set IF, ID, EXE stage to stall
+	// Set IF, ID, EXE, MEM stage to stall
+	this->stall_ma = true;
 	dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallMA();
 	dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallMA();
 	dynamic_cast<EXEStage*>(this->getSimulator()->getModule("EXEStage"))->setStallMA();

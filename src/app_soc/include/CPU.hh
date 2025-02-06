@@ -76,8 +76,6 @@ public:
 	 */
 	void cleanup() override;
 
-	void execDataPath();
-
 	/**
 	 * Update system states according to the outbound results
 	 * of all stages.
@@ -90,6 +88,8 @@ public:
 	 *    termination instruction `hcf` is not detected in WB stage
 	 */
 	void updateSystemStates();
+
+	void execDataPath();
 
 	void updatePipeRegisters();
 
@@ -129,7 +129,7 @@ public:
 		}
 	}
 
-	acalsim::MasterPort* getMasterPort() { return this->m_port_; }
+	acalsim::MasterPort* getMasterPort() { return this->m_port; }
 
 	int getDestReg(const instr& _inst);
 
@@ -139,8 +139,8 @@ public:
 
 private:
 	InstMemory*                          imem;
-	acalsim::MasterPort*                 m_port_;
-	acalsim::SlavePort*                  s_port_;
+	acalsim::MasterPort*                 m_port;
+	acalsim::SlavePort*                  s_port;
 	std::pair<bool, Register<uint32_t>*> regs[32];
 	Register<if_stage_out>*              if_id_reg;
 	Register<id_stage_out>*              id_exe_reg;
