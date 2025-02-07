@@ -57,7 +57,7 @@ void DataMemory::processMemoryRequest(Request& _req) {
 				auto data_ptr = (uint32_t*)this->readData(_req.addr, sizeof(uint32_t), true);
 				CLASS_INFO << "Read data " << data_ptr[0] << " from memory at address = " << std::dec << _req.addr;
 				// Create MemRespPacket
-				resp_pkt = new MemRespPacket("MemRespPacket", data_ptr[0]);
+				resp_pkt = new MemRespPacket("MemRespPacket", data_ptr[0], Request::ReqType::READ);
 				break;
 			}
 			default: CLASS_ERROR << "Invalid StrbType detected in DataMemory"; break;
@@ -76,7 +76,7 @@ void DataMemory::processMemoryRequest(Request& _req) {
 			default: CLASS_ERROR << "Invalid StrbType detected in DataMemory"; break;
 		}
 		// Create MemRespPacket
-		auto resp_pkt = new MemRespPacket("MemRespPacket", 0);
+		auto resp_pkt = new MemRespPacket("MemRespPacket", 0, Request::ReqType::WRITE);
 		// Send MemRespPacket to the MasterPort
 		this->m_port->push(resp_pkt);
 	}

@@ -37,8 +37,16 @@ void MEMStage::execDataPath() {
 			// Get stall cycle
 			if (this->stall_cycle_begin) {
 				auto stall_cycle = acalsim::top->getGlobalTick() - this->stall_cycle_begin;
-				auto inst_type   = inst.op;
-				switch (inst_type) {}
+				auto req_type   = this->resp_pkt->getType();
+				switch (req_type) {
+					case Request::ReqType::WRITE: {
+						cpu->getPerfCounter("MemWriteBandwidthRequirement")->counterPlusN((int)stall_cycle);
+					}
+					case Request::ReqType::READ: {
+						cpu->getPerfCounter("MemReadBandwidthRequirement")->counterPlusN((int)stall_cycle);
+					}
+					default: CLASS_ERROR << "Invalid request type"; break;
+				}
 			} else {
 				CLASS_ERROR << "Stall cycle begin is not set in MEM stage";
 			}

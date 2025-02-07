@@ -144,6 +144,15 @@ typedef struct {
 	} mem_val;
 } mem_stage_out;
 
+struct Request {
+	enum class ReqType { READ, WRITE };
+	enum class ReqSize { BYTE, HALF, WORD };
+	uint32_t  addr;
+	uint32_t* data;
+	ReqType   type;
+	ReqSize   size;
+};
+
 class PerfCounter {
 public:
 	// Add a new performance counter

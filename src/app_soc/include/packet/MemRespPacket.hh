@@ -21,18 +21,22 @@
 
 #include "ACALSim.hh"
 
+#include "CPUDefs.hh"
+
 class MemRespPacket : public acalsim::SimPacket {
 public:
-	MemRespPacket(const std::string& _name, uint32_t _data) : data(_data) {}
+	MemRespPacket(const std::string& _name, uint32_t _data, Request::ReqType _type) : data(_data), type(_type) {}
 	~MemRespPacket() {}
 
 	void visit(acalsim::Tick _when, acalsim::SimModule& _module) override;
 	void visit(acalsim::Tick _when, acalsim::SimBase& _simulator) override;
 
 	uint32_t getData() const { return this->data; }
+	Request::ReqType getType() { return this->type; }
 
 private:
 	uint32_t data;
+	Request::ReqType type;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_MEMRESPPACKET_HH_

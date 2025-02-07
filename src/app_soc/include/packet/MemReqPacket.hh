@@ -21,14 +21,7 @@
 
 #include "ACALSim.hh"
 
-struct Request {
-	enum class ReqType { READ, WRITE };
-	enum class ReqSize { BYTE, HALF, WORD };
-	uint32_t  addr;
-	uint32_t* data;
-	ReqType   type;
-	ReqSize   size;
-};
+#include "CPUDefs.hh"
 
 class MemReqPacket : public acalsim::SimPacket {
 public:
