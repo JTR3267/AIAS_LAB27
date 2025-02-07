@@ -80,9 +80,7 @@ public:
 		this->stall_ma = true;
 	}
 
-	void setFlush() {
-		this->flush = true;
-	}
+	void setFlush() { this->flush = true; }
 
 private:
 	Register<if_stage_out>*   if_id_reg;

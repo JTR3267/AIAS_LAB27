@@ -226,10 +226,8 @@ void CPU::printRegfile() {
 }
 
 void CPU::printPerfCounter() {
-	INFO << "Print Performance Counter";
-	for (auto& it : this->counters) {
-		it.second.printCounterInfo();
-	}
+	INFO << "============ Print Performance Counter ============";
+	for (auto& it : this->counters) { it.second.printCounterInfo(); }
 }
 
 void CPU::updateStatus() {

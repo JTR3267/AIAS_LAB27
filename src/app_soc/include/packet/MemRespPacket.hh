@@ -20,7 +20,6 @@
 #include <string>
 
 #include "ACALSim.hh"
-
 #include "CPUDefs.hh"
 
 class MemRespPacket : public acalsim::SimPacket {
@@ -31,11 +30,11 @@ public:
 	void visit(acalsim::Tick _when, acalsim::SimModule& _module) override;
 	void visit(acalsim::Tick _when, acalsim::SimBase& _simulator) override;
 
-	uint32_t getData() const { return this->data; }
+	uint32_t         getData() const { return this->data; }
 	Request::ReqType getType() { return this->type; }
 
 private:
-	uint32_t data;
+	uint32_t         data;
 	Request::ReqType type;
 };
 

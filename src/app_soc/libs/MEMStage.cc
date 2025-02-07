@@ -38,13 +38,18 @@ void MEMStage::execDataPath() {
 			if (this->stall_cycle_begin) {
 				int stall_cycle = (int)(acalsim::top->getGlobalTick() - this->stall_cycle_begin);
 				CLASS_INFO << "Stall cycle due to Data Memory access is " << stall_cycle;
-				auto req_type   = this->resp_pkt->getType();
+				auto req_type = this->resp_pkt->getType();
+				auto cpu      = dynamic_cast<CPU*>(this->getSimulator());
 				switch (req_type) {
 					case Request::ReqType::WRITE: {
-						cpu->getPerfCounter("MemWriteBandwidthRequirement")->counterPlusN(stall_cycle);
+						CLASS_INFO << "Add stall cycle for write " << stall_cycle;
+						cpu->getPerfCounter("MemWriteStallCycleCount")->counterPlusN(stall_cycle);
+						break;
 					}
 					case Request::ReqType::READ: {
-						cpu->getPerfCounter("MemReadBandwidthRequirement")->counterPlusN(stall_cycle);
+						CLASS_INFO << "Add stall cycle for read " << stall_cycle;
+						cpu->getPerfCounter("MemReadStallCycleCount")->counterPlusN(stall_cycle);
+						break;
 					}
 					default: CLASS_ERROR << "Invalid request type"; break;
 				}
@@ -70,8 +75,7 @@ void MEMStage::execDataPath() {
 				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 			}
-		}
-		else {
+		} else {
 			CLASS_INFO << "MEMStage stall due to memory access";
 			this->mem_wb_reg->set(nullptr);
 		}
@@ -104,6 +108,7 @@ void MEMStage::execDataPath() {
 void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 	auto inst      = _info->inst;
 	auto inst_type = inst.op;
+	auto cpu       = dynamic_cast<CPU*>(this->getSimulator());
 	switch (inst_type) {
 		case instr_type::SB: {
 			CLASS_INFO << "SB instruction";

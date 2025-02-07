@@ -92,8 +92,7 @@ void DataMemory::reqPacketHandler(MemReqPacket* _pkt) {
 		auto process_event = new MemProcessEvent(this, req);
 		this->scheduleEvent(process_event, acalsim::top->getGlobalTick() + read_latency);
 	} else if (req.type == Request::ReqType::WRITE) {
-		CLASS_INFO << "Detect Write Request "
-		           << ", Data = 0x" << std::hex << *req.data;
+		CLASS_INFO << "Detect Write Request, Data = 0x" << std::hex << *req.data;
 		auto write_latency = acalsim::top->getParameter<acalsim::Tick>("SOC", "memory_write_latency");
 		auto process_event = new MemProcessEvent(this, req);
 		this->scheduleEvent(process_event, acalsim::top->getGlobalTick() + write_latency);

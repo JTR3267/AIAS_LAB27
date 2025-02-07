@@ -20,7 +20,6 @@
 #include <string>
 
 #include "ACALSim.hh"
-
 #include "CPUDefs.hh"
 
 class MemReqPacket : public acalsim::SimPacket {
