@@ -28,8 +28,9 @@
 #define MAX_LABEL_LEN   32
 #define MAX_SRC_LEN     (1024 * 1024)
 
-#include "ACALSim.hh"
 #include <string>
+
+#include "ACALSim.hh"
 
 typedef enum {
 	UNIMPL = 0,
@@ -151,12 +152,13 @@ public:
 	// API to plus 1
 	void counterPlusOne() { this->counter++; }
 	// API to plus more than 1
-	void counterPlusN(int _n) { this->counter+=_n; }
+	void counterPlusN(int _n) { this->counter += _n; }
 	// Log the counter value in one line
 	void printCounterInfo() { INFO << this->name << " counter value = " << this->counter; }
+
 private:
 	std::string name;
-	int counter = 0;
+	int         counter = 0;
 }
 
 #endif

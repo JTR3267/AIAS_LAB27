@@ -61,6 +61,7 @@ void WBStage::execDataPath() {
 			case instr_type::HCF: break;
 			default: CLASS_ERROR << "Invalid instruction type"; break;
 		}
+		cpu->getPerfCounter("CommittedInstructionCount")->counterPlusOne();
 	} else {
 		CLASS_INFO << "NOP";
 	}

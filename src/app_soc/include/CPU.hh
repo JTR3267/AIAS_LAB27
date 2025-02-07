@@ -137,8 +137,27 @@ public:
 
 	void handler(MemRespPacket* _pkt);
 
-	// Get the performance counter value by name (CPU API)
+	void printPerfCounterValue(const std::string& _name) { this->counters.find(_name)->second.printCounterInfo(); }
 
+	PerfCounter* getPerfCounter(const std::string& _name) {
+		auto isExist = this->counters.find(_name);
+		if (isExist != this->counters.end()) {
+			return &isExist->second;
+		} else {
+			CLASS_ERROR << "Performance counter " << _name << " does not exist!";
+			return nullptr;
+		}
+	}
+
+	// Create a new performance counter
+	void createPerfCounter(const std::string& _name) {
+		auto isExist = this->counters.find(_name);
+		if (isExist == this->counters.end()) {
+			this->counters.insert(std::make_pair(_name, PerfCounter(_name)));
+		} else {
+			ERROR << "Performance counter " << _name << " already exists!";
+		}
+	}
 
 private:
 	InstMemory*                          imem;

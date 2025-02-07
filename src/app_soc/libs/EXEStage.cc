@@ -62,12 +62,16 @@ void EXEStage::execDataPath() {
 					write_data_           = 0;
 					alu_out_              = 0;
 					CLASS_INFO << "Detect branch compare instruction, result = " << branch_compare.first;
+					cpu->getPerfCounter("ConditionalBranchCount")->counterPlusOne();
+					if (branch_compare.first) cpu->getPerfCounter("ConditionalBranchHitCount")->counterPlusOne();
 					break;
 				case JAL:
 					branch_compare.first  = true;
 					branch_compare.second = info->immediate;
 					write_data_           = 0;
 					alu_out_              = 0;
+					cpu->getPerfCounter("UnconditionalBranchCount")->counterPlusOne();
+					cpu->getPerfCounter("UnconditionalBranchHitCount")->counterPlusOne();
 					break;
 				case SB:
 					alu_out_    = info->rs2_data + info->immediate;
@@ -88,6 +92,7 @@ void EXEStage::execDataPath() {
 				if_stage->setExeNextPC(std::make_pair(true, branch_compare.second));
 				if_stage->setFlush();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setFlush();
+				cpu->getPerfCounter("FlushCount")->counterPlusOne();
 			}
 			std::shared_ptr<exe_stage_out> infoPtr = std::make_shared<exe_stage_out>(
 			    exe_stage_out{.pc = info->pc, .inst = info->inst, .alu_out = alu_out_, .write_data = write_data_});

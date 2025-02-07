@@ -80,6 +80,7 @@ private:
 	MemRespPacket*           resp_pkt;
 	mem_stage_status         status = mem_stage_status::IDLE;
 	bool                     stall_ma;
+	acalsim::Tick            stall_cycle_begin = 0;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_MEMSTAGE_HH_

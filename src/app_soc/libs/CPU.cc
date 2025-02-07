@@ -76,32 +76,47 @@ void CPU::init() {
 	// Performance counter
 	// Cycle Count
 	// Count cycles passed.
+	// Performance Counter
+
 	// Fetched Instruction Count
 	// Count instruction fetched in IF-stage.
+	this->createPerfCounter("FetchedInstructionCount");
 	// Conditional Branch(Bxx) Count
 	// Count B-type instructions executed in EXE-stage.
+	this->createPerfCounter("ConditionalBranchCount");
 	// Conditional Branch(Bxx) hit count
 	// Count B-type instructions predict hit in EXE-stage.
+	this->createPerfCounter("ConditionalBranchHitCount");
 	// Unconditional Branch(Jxx) Count
 	// Count J-type instructions executed in EXE-stage.
+	this->createPerfCounter("UnconditionalBranchCount");
 	// Unconditional Branch(Jxx) hit count
 	// Count J-type instructions predict hit in EXE-stage.
+	this->createPerfCounter("UnconditionalBranchHitCount");
 	// Flush Count
 	// Count instructions flushed due to prediction miss.
+	this->createPerfCounter("FlushCount");
 	// Mem Read Stall Cycle Count
 	// Count cycles stalled due to memory read.
+	this->createPerfCounter("MemReadStallCycleCount");
 	// Mem Write Stall Cycle Count
 	// Count cycles stalled due to memory write.
+	this->createPerfCounter("MemWriteStallCycleCount");
 	// Mem Read Request Count
 	// Count Load-type instruction.
+	this->createPerfCounter("MemReadRequestCount");
 	// Mem Write Request Count
 	// Count Store-type instruction.
+	this->createPerfCounter("MemWriteRequestCount");
 	// Mem Read Bandwidth Requirement (in Byte)
 	// Count bytes read in Load-type instruction (lw/lh/lb - all 4 bytes are occupied).
+	this->createPerfCounter("MemReadBandwidthRequirement");
 	// Mem Write Bandwidth Requirement (in Byte)
 	// Count bytes write in Store-type instruction (sw/sh/sb - all 4 bytes are occupied).
+	this->createPerfCounter("MemWriteBandwidthRequirement");
 	// Committed Instruction Count
 	// Count the instructions finished by the CPU.
+	this->createPerfCounter("CommittedInstructionCount");
 }
 
 void CPU::registerModules() {

@@ -43,6 +43,7 @@ void IFStage::execDataPath() {
 		    std::make_shared<if_stage_out>(if_stage_out{.pc = current_pc, .inst = fetch_instr});
 
 		this->if_id_reg->set(infoPtr);
+		cpu->getPerfCounter("FetchedInstructionCount")->counterPlusOne();
 	}
 	if ((!this->stall_dh && !this->stall_ma) || this->flush) {
 		if (this->exe_next_pc.first) {

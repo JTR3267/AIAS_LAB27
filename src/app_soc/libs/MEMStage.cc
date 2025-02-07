@@ -34,6 +34,14 @@ void MEMStage::step() {}
 void MEMStage::execDataPath() {
 	if (this->status == mem_stage_status::WAIT || this->stall_ma) {
 		if (this->resp_pkt) {
+			// Get stall cycle
+			if (this->stall_cycle_begin) {
+				auto stall_cycle = acalsim::top->getGlobalTick() - this->stall_cycle_begin;
+				auto inst_type   = inst.op;
+				switch (inst_type) {}
+			} else {
+				CLASS_ERROR << "Stall cycle begin is not set in MEM stage";
+			}
 			// Send the data to the WB stage
 			auto info  = std::make_shared<mem_stage_out>();
 			info->pc   = this->exe_mem_reg->get()->pc;
@@ -90,6 +98,8 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 			                                                 .data = data,
 			                                                 .type = Request::ReqType::WRITE,
 			                                                 .size = Request::ReqSize::BYTE});
+			cpu->getPerfCounter("MemWriteRequestCount")->counterPlusOne();
+			cpu->getPerfCounter("MemWriteBandwidthRequirement")->counterPlusN(4);
 			this->sendReqToMemory(memReq);
 			break;
 		}
@@ -99,6 +109,8 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 			    "MemReq",
 			    Request{
 			        .addr = _info->alu_out, .data = 0, .type = Request::ReqType::READ, .size = Request::ReqSize::WORD});
+			cpu->getPerfCounter("MemReadRequestCount")->counterPlusOne();
+			cpu->getPerfCounter("MemReadBandwidthRequirement")->counterPlusN(4);
 			this->sendReqToMemory(memReq);
 			break;
 		}
@@ -146,6 +158,7 @@ void MEMStage::sendReqToMemory(MemReqPacket* _pkt) {
 		this->setStatus(mem_stage_status::WAIT);
 		// Send the packet to Data Memory
 		m_port->push(_pkt);
+		this->stall_cycle_begin = acalsim::top->getGlobalTick();
 	} else {
 		CLASS_ERROR << "[MEMStage] Failed to push the MemReqPacket into MasterPort";
 	}
