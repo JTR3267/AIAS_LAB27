@@ -44,6 +44,8 @@ void IFStage::execDataPath() {
 
 		this->if_id_reg->set(infoPtr);
 		cpu->getPerfCounter("FetchedInstructionCount")->counterPlusOne();
+	} else {
+		this->if_id_reg->set(nullptr);
 	}
 	if ((!this->stall_dh && !this->stall_ma) || this->flush) {
 		if (this->exe_next_pc.first) {

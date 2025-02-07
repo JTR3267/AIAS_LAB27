@@ -125,7 +125,8 @@ void IDStage::execDataPath() {
 			this->id_exe_reg->set(nullptr);
 			CLASS_INFO << "NOP";
 		}
-	} else if (this->stall_dh) {
+	} else {
+		// Pass nullptr when stall/flush status detects
 		this->id_exe_reg->set(nullptr);
 	}
 

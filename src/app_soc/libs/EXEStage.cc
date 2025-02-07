@@ -103,5 +103,6 @@ void EXEStage::execDataPath() {
 		}
 	} else {
 		CLASS_INFO << "EXEStage stall due to memory access";
+		this->exe_mem_reg->set(nullptr);
 	}
 }

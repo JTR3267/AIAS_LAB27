@@ -63,15 +63,18 @@ public:
 		this->flush    = false;
 	}
 
-	void setStallDH() { this->stall_dh = true; }
+	void setStallDH() {
+		this->if_id_reg->setStall();
+		this->stall_dh = true;
+	}
 
 	void setStallMA() {
+		this->if_id_reg->setStall();
 		this->stall_ma = true;
-		this->id_exe_reg->setStall();
 	}
 
 	void setFlush() {
-		this->id_exe_reg->setFlush();
+		this->if_id_reg->setFlush();
 		this->flush = true;
 	}
 

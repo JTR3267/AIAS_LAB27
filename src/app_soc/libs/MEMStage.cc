@@ -36,17 +36,20 @@ void MEMStage::execDataPath() {
 		if (this->resp_pkt) {
 			// Get stall cycle
 			if (this->stall_cycle_begin) {
-				auto stall_cycle = acalsim::top->getGlobalTick() - this->stall_cycle_begin;
+				int stall_cycle = (int)(acalsim::top->getGlobalTick() - this->stall_cycle_begin);
+				CLASS_INFO << "Stall cycle due to Data Memory access is " << stall_cycle;
 				auto req_type   = this->resp_pkt->getType();
 				switch (req_type) {
 					case Request::ReqType::WRITE: {
-						cpu->getPerfCounter("MemWriteBandwidthRequirement")->counterPlusN((int)stall_cycle);
+						cpu->getPerfCounter("MemWriteBandwidthRequirement")->counterPlusN(stall_cycle);
 					}
 					case Request::ReqType::READ: {
-						cpu->getPerfCounter("MemReadBandwidthRequirement")->counterPlusN((int)stall_cycle);
+						cpu->getPerfCounter("MemReadBandwidthRequirement")->counterPlusN(stall_cycle);
 					}
 					default: CLASS_ERROR << "Invalid request type"; break;
 				}
+				// Reset stall cycle
+				stall_cycle_begin = 0;
 			} else {
 				CLASS_ERROR << "Stall cycle begin is not set in MEM stage";
 			}
@@ -67,6 +70,10 @@ void MEMStage::execDataPath() {
 				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 			}
+		}
+		else {
+			CLASS_INFO << "MEMStage stall due to memory access";
+			this->mem_wb_reg->set(nullptr);
 		}
 	} else if (this->status == mem_stage_status::IDLE) {
 		auto info = this->exe_mem_reg->get();
@@ -155,7 +162,7 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 
 void MEMStage::sendReqToMemory(MemReqPacket* _pkt) {
 	// Set IF, ID, EXE, MEM stage to stall
-	this->stall_ma = true;
+	this->setStallMA();
 	dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallMA();
 	dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallMA();
 	dynamic_cast<EXEStage*>(this->getSimulator()->getModule("EXEStage"))->setStallMA();

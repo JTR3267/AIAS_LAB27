@@ -57,7 +57,7 @@ public:
 	void updateStatus() { this->stall_ma = false; }
 
 	void setStallMA() {
-		this->exe_mem_reg->setStall();
+		this->id_exe_reg->setStall();
 		this->stall_ma = true;
 	}
 

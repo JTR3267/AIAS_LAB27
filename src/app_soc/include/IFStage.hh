@@ -71,19 +71,16 @@ public:
 	}
 
 	void setStallDH() {
-		this->if_id_reg->setStall();
 		this->pc_reg->setStall();
 		this->stall_dh = true;
 	}
 
 	void setStallMA() {
-		this->if_id_reg->setStall();
 		this->pc_reg->setStall();
 		this->stall_ma = true;
 	}
 
 	void setFlush() {
-		this->if_id_reg->setFlush();
 		this->flush = true;
 	}
 

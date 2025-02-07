@@ -74,6 +74,11 @@ public:
 
 	void setRespPkt(MemRespPacket* _pkt) { this->resp_pkt = _pkt; }
 
+	void setStallMA() {
+		this->exe_mem_reg->setStall();
+		this->stall_ma = true;
+	}
+
 private:
 	Register<exe_stage_out>* exe_mem_reg;
 	Register<mem_stage_out>* mem_wb_reg;
