@@ -137,6 +137,9 @@ public:
 
 	void handler(MemRespPacket* _pkt);
 
+	// Get the performance counter value by name (CPU API)
+
+
 private:
 	InstMemory*                          imem;
 	acalsim::MasterPort*                 m_port;

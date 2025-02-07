@@ -28,6 +28,9 @@
 #define MAX_LABEL_LEN   32
 #define MAX_SRC_LEN     (1024 * 1024)
 
+#include "ACALSim.hh"
+#include <string>
+
 typedef enum {
 	UNIMPL = 0,
 
@@ -142,13 +145,18 @@ typedef struct {
 
 class PerfCounter {
 public:
-	// Get the performance counter value by name (CPU API)
-
 	// Add a new performance counter
+	PerfCounter(const std::string& _name) : name(_name) {}
+	~PerfCounter() {}
 	// API to plus 1
+	void counterPlusOne() { this->counter++; }
 	// API to plus more than 1
+	void counterPlusN(int _n) { this->counter+=_n; }
 	// Log the counter value in one line
+	void printCounterInfo() { INFO << this->name << " counter value = " << this->counter; }
 private:
+	std::string name;
+	int counter = 0;
 }
 
 #endif

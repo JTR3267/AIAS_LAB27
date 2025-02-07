@@ -73,6 +73,35 @@ void CPU::init() {
 	int      index      = current_pc / 4;
 	this->recordTrace<uint32_t>(if_stage->getPCReg(), this->instrToString(this->fetchInstr(index).op),
 	                            this->if_trace_data);
+	// Performance counter
+	// Cycle Count
+	// Count cycles passed.
+	// Fetched Instruction Count
+	// Count instruction fetched in IF-stage.
+	// Conditional Branch(Bxx) Count
+	// Count B-type instructions executed in EXE-stage.
+	// Conditional Branch(Bxx) hit count
+	// Count B-type instructions predict hit in EXE-stage.
+	// Unconditional Branch(Jxx) Count
+	// Count J-type instructions executed in EXE-stage.
+	// Unconditional Branch(Jxx) hit count
+	// Count J-type instructions predict hit in EXE-stage.
+	// Flush Count
+	// Count instructions flushed due to prediction miss.
+	// Mem Read Stall Cycle Count
+	// Count cycles stalled due to memory read.
+	// Mem Write Stall Cycle Count
+	// Count cycles stalled due to memory write.
+	// Mem Read Request Count
+	// Count Load-type instruction.
+	// Mem Write Request Count
+	// Count Store-type instruction.
+	// Mem Read Bandwidth Requirement (in Byte)
+	// Count bytes read in Load-type instruction (lw/lh/lb - all 4 bytes are occupied).
+	// Mem Write Bandwidth Requirement (in Byte)
+	// Count bytes write in Store-type instruction (sw/sh/sb - all 4 bytes are occupied).
+	// Committed Instruction Count
+	// Count the instructions finished by the CPU.
 }
 
 void CPU::registerModules() {
