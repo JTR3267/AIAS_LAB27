@@ -206,7 +206,7 @@ void CPU::updateRegisterFile() {
 void CPU::printRegfile() {
 	std::ostringstream oss;
 
-	oss << "CPU Simulation is done\n";
+	oss << "Pring Register File:\n";
 
 	for (int i = 0; i < 32; i++) {
 		oss << "x" << std::setw(2) << std::setfill('0') << std::dec << i << ":0x";
@@ -223,6 +223,13 @@ void CPU::printRegfile() {
 	oss << "\n";
 
 	CLASS_INFO << oss.str();
+}
+
+void CPU::printPerfCounter() {
+	INFO << "Print Performance Counter";
+	for (auto& it : this->counters) {
+		it.second.printCounterInfo();
+	}
 }
 
 void CPU::updateStatus() {
@@ -393,8 +400,9 @@ std::string CPU::instrToString(instr_type op) {
 }
 
 void CPU::cleanup() {
+	INFO << "CPU Simulation is done";
 	this->printRegfile();
-	// Print statistics
+	this->printPerfCounter();
 }
 
 template void CPU::recordTrace<uint32_t>(Register<uint32_t>* reg, std::string inst_name, ChromeTraceData* data);

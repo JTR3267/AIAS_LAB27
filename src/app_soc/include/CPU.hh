@@ -137,6 +137,8 @@ public:
 
 	void handler(MemRespPacket* _pkt);
 
+	void printPerfCounter();
+
 	void printPerfCounterValue(const std::string& _name) { this->counters.find(_name)->second.printCounterInfo(); }
 
 	PerfCounter* getPerfCounter(const std::string& _name) {
