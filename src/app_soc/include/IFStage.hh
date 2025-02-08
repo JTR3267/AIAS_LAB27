@@ -89,6 +89,7 @@ private:
 	bool                      flush;
 	bool                      stall_dh;
 	bool                      stall_ma;
+	bool                      is_hcf = false;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_IFSTAGE_HH_

@@ -54,8 +54,6 @@ public:
 
 	void execDataPath();
 
-	bool checkDataHazard(int _rd);
-
 	bool checkHcf();
 
 private:

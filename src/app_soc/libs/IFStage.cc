@@ -43,7 +43,7 @@ void IFStage::execDataPath() {
 		    std::make_shared<if_stage_out>(if_stage_out{.pc = current_pc, .inst = fetch_instr});
 
 		this->if_id_reg->set(infoPtr);
-		cpu->getPerfCounter("FetchedInstructionCount")->counterPlusOne();
+		if (fetch_instr.op != UNIMPL) cpu->getPerfCounter("FetchedInstructionCount")->counterPlusOne();
 	} else {
 		this->if_id_reg->set(nullptr);
 	}

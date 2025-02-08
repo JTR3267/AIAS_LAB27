@@ -247,6 +247,7 @@ void CPU::checkNextCycleEvent() {
 		auto event = rc->acquire<CPUSingleIterationEvent>(&CPUSingleIterationEvent::renew, this);
 		this->scheduleEvent(event, acalsim::top->getGlobalTick() + 1);
 	} else if (hcf) {
+		this->getPerfCounter("CommittedInstructionCount")->counterPlusOne();
 		CLASS_INFO << "HCF instruction detected in WB stage. Simulation ends.";
 	}
 }
