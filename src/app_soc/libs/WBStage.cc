@@ -43,17 +43,17 @@ void WBStage::execDataPath() {
 		auto inst_type = info->inst.op;
 		switch (inst_type) {
 			case instr_type::LW: {
-				cpu->writeRegister(info->inst.a1.reg, info->mem_val.load_data);
+				cpu->getRegFile()->writeRegister(info->inst.a1.reg, info->mem_val.load_data);
 				break;
 			}
 			case instr_type::JAL: {
-				cpu->writeRegister(info->inst.a1.reg, info->mem_val.pc_plus_4_to_rd);
+				cpu->getRegFile()->writeRegister(info->inst.a1.reg, info->mem_val.pc_plus_4_to_rd);
 				break;
 			}
 			case instr_type::ADD:
 			case instr_type::ADDI:
 			case instr_type::LUI: {
-				cpu->writeRegister(info->inst.a1.reg, info->mem_val.alu_out);
+				cpu->getRegFile()->writeRegister(info->inst.a1.reg, info->mem_val.alu_out);
 				break;
 			}
 			case instr_type::SB:

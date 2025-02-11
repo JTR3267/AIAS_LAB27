@@ -50,8 +50,8 @@ void IDStage::execDataPath() {
 				case SLL:
 				case SRL:
 				case SRA:
-					rs1_data  = cpu->readRegister(info->inst.a2.reg);
-					rs2_data  = cpu->readRegister(info->inst.a3.reg);
+					rs1_data  = cpu->getRegFile()->readRegister(info->inst.a2.reg);
+					rs2_data  = cpu->getRegFile()->readRegister(info->inst.a3.reg);
 					immediate = 0;
 					break;
 
@@ -65,7 +65,7 @@ void IDStage::execDataPath() {
 				case SRLI:
 				case SRAI:
 					rs1_data  = 0;
-					rs2_data  = cpu->readRegister(info->inst.a2.reg);
+					rs2_data  = cpu->getRegFile()->readRegister(info->inst.a2.reg);
 					immediate = info->inst.a3.imm;
 					break;
 
@@ -75,20 +75,20 @@ void IDStage::execDataPath() {
 				case BLT:
 				case BLTU:
 				case BNE:
-					rs1_data  = cpu->readRegister(info->inst.a1.reg);
-					rs2_data  = cpu->readRegister(info->inst.a2.reg);
+					rs1_data  = cpu->getRegFile()->readRegister(info->inst.a1.reg);
+					rs2_data  = cpu->getRegFile()->readRegister(info->inst.a2.reg);
 					immediate = info->inst.a3.imm;
 					break;
 
 				case SB:
-					rs1_data  = cpu->readRegister(info->inst.a1.reg);
-					rs2_data  = cpu->readRegister(info->inst.a2.reg);
+					rs1_data  = cpu->getRegFile()->readRegister(info->inst.a1.reg);
+					rs2_data  = cpu->getRegFile()->readRegister(info->inst.a2.reg);
 					immediate = info->inst.a3.imm;
 					CLASS_INFO << "RS1 data = " << rs1_data << ", RS2 data = " << rs2_data;
 					break;
 				case LW:
 					rs1_data  = 0;
-					rs2_data  = cpu->readRegister(info->inst.a2.reg);
+					rs2_data  = cpu->getRegFile()->readRegister(info->inst.a2.reg);
 					immediate = info->inst.a3.imm;
 					break;
 				case JALR:

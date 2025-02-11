@@ -27,10 +27,7 @@
 CPU::CPU(const std::string& _name, const std::string& _m_port, const std::string& _s_port)
     : acalsim::CPPSimBase(_name) {
 	this->imem = new InstMemory();
-	for (int i = 0; i < 32; i++) {
-		this->regs[i].first  = false;
-		this->regs[i].second = new Register<uint32_t>(std::make_shared<uint32_t>(0));
-	}
+	this->regs = new RegFile(32);
 
 	this->if_id_reg   = new Register<if_stage_out>();
 	this->id_exe_reg  = new Register<id_stage_out>();
@@ -194,37 +191,6 @@ void CPU::updatePipeRegisters() {
 	this->mem_wb_reg->update([this]() { this->recordTrace<mem_stage_out>(this->mem_wb_reg, this->wb_trace_data); });
 }
 
-void CPU::updateRegisterFile() {
-	for (int i = 0; i < 32; i++) {
-		if (this->regs[i].first) {
-			this->regs[i].second->update();
-			this->regs[i].first = false;
-		}
-	}
-}
-
-void CPU::printRegfile() {
-	std::ostringstream oss;
-
-	oss << "Pring Register File:\n";
-
-	for (int i = 0; i < 32; i++) {
-		oss << "x" << std::setw(2) << std::setfill('0') << std::dec << i << ":0x";
-
-		auto val = regs[i].second->get();
-
-		uint32_t reg_value = (val) ? *val : 0;
-
-		oss << std::setw(8) << std::setfill('0') << std::hex << reg_value << " ";
-
-		if ((i + 1) % 8 == 0) { oss << "\n"; }
-	}
-
-	oss << "\n";
-
-	CLASS_INFO << oss.str();
-}
-
 void CPU::printPerfCounter() {
 	INFO << "============ Print Performance Counter ============";
 	for (auto& it : this->counters) { it.second.printCounterInfo(); }
@@ -314,7 +280,7 @@ void CPU::updateSystemStates() {
 	this->checkNextCycleEvent();
 	this->updateStatus();
 	this->updatePipeRegisters();
-	this->updateRegisterFile();
+	this->getRegFile()->updateRegisterFile();
 	this->updatePC();
 }
 
@@ -400,7 +366,7 @@ std::string CPU::instrToString(instr_type op) {
 
 void CPU::cleanup() {
 	INFO << "CPU Simulation is done";
-	this->printRegfile();
+	this->getRegFile()->printRegfile();
 	this->printPerfCounter();
 }
 

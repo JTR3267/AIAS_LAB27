@@ -93,14 +93,13 @@ public:
 
 	void updatePipeRegisters();
 
-	void updateRegisterFile();
-
 	void updateStatus();
 
 	void updatePC();
 
 	void checkNextCycleEvent();
 
+<<<<<<< HEAD
 	void printRegfile();
 
 	template <typename T>
@@ -129,6 +128,10 @@ public:
 		}
 	}
 
+=======
+	const instr& fetchInstr(int index) { return this->imem->fetchInstr(index); }
+
+>>>>>>> c52f28a (feat: Add RegFile class to integrate register file operation in CPU)
 	acalsim::MasterPort* getMasterPort() { return this->m_port; }
 
 	int getDestReg(const instr& _inst);
@@ -136,6 +139,8 @@ public:
 	bool checkDataHazard(int _rd, std::string _stage);
 
 	void handler(MemRespPacket* _pkt);
+
+	RegFile* getRegFile() { return this->regs; }
 
 	void printPerfCounter();
 
@@ -162,20 +167,19 @@ public:
 	}
 
 private:
-	InstMemory*                          imem;
-	acalsim::MasterPort*                 m_port;
-	acalsim::SlavePort*                  s_port;
-	std::pair<bool, Register<uint32_t>*> regs[32];
-	Register<if_stage_out>*              if_id_reg;
-	Register<id_stage_out>*              id_exe_reg;
-	Register<exe_stage_out>*             exe_mem_reg;
-	Register<mem_stage_out>*             mem_wb_reg;
-
 	ChromeTraceData* if_trace_data;
 	ChromeTraceData* id_trace_data;
 	ChromeTraceData* exe_trace_data;
 	ChromeTraceData* mem_trace_data;
 	ChromeTraceData* wb_trace_data;
+	InstMemory*              imem;
+	RegFile*                 regs;
+	acalsim::MasterPort*     m_port;
+	acalsim::SlavePort*      s_port;
+	Register<if_stage_out>*  if_id_reg;
+	Register<id_stage_out>*  id_exe_reg;
+	Register<exe_stage_out>* exe_mem_reg;
+	Register<mem_stage_out>* mem_wb_reg;
 	// Performance Counter
 	std::unordered_map<std::string, PerfCounter> counters;
 };

@@ -31,6 +31,7 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "Register.hh"
 
 typedef enum {
 	UNIMPL = 0,
@@ -156,6 +157,7 @@ struct Request {
 class PerfCounter {
 public:
 	// Add a new performance counter
+	PerfCounter() {}
 	PerfCounter(const std::string& _name) : name(_name) {}
 	~PerfCounter() {}
 	// API to plus 1
@@ -168,6 +170,63 @@ public:
 private:
 	std::string name;
 	int         counter = 0;
+};
+
+class RegFile {
+public:
+	RegFile() {}
+	RegFile(int _size = 32) : size(_size) {
+		this->regs = new std::pair<bool, Register<uint32_t>*>[_size];
+		for (int i = 0; i < _size; i++) {
+			this->regs[i].first  = false;
+			this->regs[i].second = new Register<uint32_t>(std::make_shared<uint32_t>(0));
+		}
+	}
+	~RegFile() {
+		for (int i = 0; i < this->size; i++) { delete this->regs[i].second; }
+		delete[] this->regs;
+	};
+
+	void printRegfile() {
+		std::ostringstream oss;
+		oss << "Pring Register File:\n";
+		for (int i = 0; i < this->size; i++) {
+			oss << "x" << std::setw(2) << std::setfill('0') << std::dec << i << ":0x";
+			auto val       = this->regs[i].second->get();
+			auto reg_value = (val) ? *val : 0;
+			oss << std::setw(8) << std::setfill('0') << std::hex << reg_value << " ";
+			if ((i + 1) % 8 == 0) { oss << "\n"; }
+		}
+		oss << "\n";
+		INFO << oss.str();
+	}
+
+	void updateRegisterFile() {
+		for (int i = 0; i < this->size; i++) {
+			if (this->regs[i].first) {
+				this->regs[i].second->update();
+				this->regs[i].first = false;
+			}
+		}
+	}
+
+	const uint32_t& readRegister(int index) {
+		ASSERT(index >= 0 && index < this->size);
+		return *(this->regs[index].second->get());
+	}
+
+	void writeRegister(int index, uint32_t value) {
+		ASSERT(index >= 0 && index < this->size);
+		if (index != 0) {
+			this->regs[index].first = true;
+			this->regs[index].second->set(std::make_shared<uint32_t>(value));
+			INFO << "WB Stage write 0x" << std::hex << value << " to register x" << std::dec << index;
+		}
+	}
+
+private:
+	std::pair<bool, Register<uint32_t>*>* regs;
+	int                                   size;
 };
 
 #endif
