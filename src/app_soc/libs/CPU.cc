@@ -37,6 +37,12 @@ CPU::CPU(const std::string& _name, const std::string& _m_port, const std::string
 	this->exe_mem_reg = new Register<exe_stage_out>();
 	this->mem_wb_reg  = new Register<mem_stage_out>();
 
+	this->if_trace_data  = new ChromeTraceData({.is_started = false, .stage_name = "IFStage", .event_name = "INIT"});
+	this->id_trace_data  = new ChromeTraceData({.is_started = false, .stage_name = "IDStage", .event_name = "INIT"});
+	this->exe_trace_data = new ChromeTraceData({.is_started = false, .stage_name = "EXEStage", .event_name = "INIT"});
+	this->mem_trace_data = new ChromeTraceData({.is_started = false, .stage_name = "MEMStage", .event_name = "INIT"});
+	this->wb_trace_data  = new ChromeTraceData({.is_started = false, .stage_name = "WBStage", .event_name = "INIT"});
+
 	// Generate and Register MasterPorts
 	this->m_port_ = this->addMasterPort(_m_port);
 	// Generate and Register SlavePorts
@@ -61,6 +67,12 @@ void CPU::init() {
 	auto rc    = acalsim::top->getRecycleContainer();
 	auto event = rc->acquire<CPUSingleIterationEvent>(&CPUSingleIterationEvent::renew, this);
 	this->scheduleEvent(event, acalsim::top->getGlobalTick() + 1);
+
+	IFStage* if_stage   = dynamic_cast<IFStage*>(this->getModule("IFStage"));
+	uint32_t current_pc = if_stage->getCurPC();
+	int      index      = current_pc / 4;
+	this->recordTrace<uint32_t>(if_stage->getPCReg(), this->instrToString(this->fetchInstr(index).op),
+	                            this->if_trace_data);
 }
 
 void CPU::registerModules() {
@@ -80,6 +92,49 @@ void CPU::registerModules() {
 	// Connect SimPort
 }
 
+template <typename T>
+void CPU::recordTrace(Register<T>* reg, std::string inst_name, ChromeTraceData* data) {
+	auto        info            = reg->get();
+	std::string inst_event_name = inst_name + " (pc = " + std::to_string(*info + 4) + ")" + " - " + data->stage_name;
+	if (data->is_started) {
+		acalsim::top->addChromeTraceRecord(acalsim::ChromeTraceRecord::createDurationEvent(
+		    "E", "CPU", data->event_name, acalsim::top->getGlobalTick(), "", data->stage_name));
+		if (inst_name != "UNIMPL") {
+			acalsim::top->addChromeTraceRecord(acalsim::ChromeTraceRecord::createDurationEvent(
+			    "B", "CPU", inst_event_name, acalsim::top->getGlobalTick(), "", data->stage_name));
+		}
+	} else {
+		if (inst_name != "UNIMPL") {
+			acalsim::top->addChromeTraceRecord(acalsim::ChromeTraceRecord::createDurationEvent(
+			    "B", "CPU", inst_event_name, acalsim::top->getGlobalTick(), "", data->stage_name));
+		}
+	}
+
+	data->event_name = inst_event_name;
+	data->is_started = true;
+}
+
+template <typename T>
+void CPU::recordTrace(Register<T>* reg, ChromeTraceData* data) {
+	auto info = reg->get();
+
+	std::string inst_name = info == nullptr
+	                            ? "NOP (tick = " + std::to_string(acalsim::top->getGlobalTick()) + ")"
+	                            : this->instrToString(info->inst.op) + " (pc = " + std::to_string(info->pc) + ")";
+	inst_name             = inst_name + " - " + data->stage_name;
+	if (data->is_started) {
+		acalsim::top->addChromeTraceRecord(acalsim::ChromeTraceRecord::createDurationEvent(
+		    "E", "CPU", data->event_name, acalsim::top->getGlobalTick(), "", data->stage_name));
+	}
+	if (!info || info->inst.op != UNIMPL) {
+		acalsim::top->addChromeTraceRecord(acalsim::ChromeTraceRecord::createDurationEvent(
+		    "B", "CPU", inst_name, acalsim::top->getGlobalTick(), "", data->stage_name));
+	}
+
+	data->event_name = inst_name;
+	data->is_started = true;
+}
+
 void CPU::execDataPath() {
 	dynamic_cast<WBStage*>(this->getModule("WBStage"))->execDataPath();
 	dynamic_cast<MEMStage*>(this->getModule("MEMStage"))->execDataPath();
@@ -89,10 +144,10 @@ void CPU::execDataPath() {
 }
 
 void CPU::updatePipeRegisters() {
-	this->if_id_reg->update();
-	this->id_exe_reg->update();
-	this->exe_mem_reg->update();
-	this->mem_wb_reg->update();
+	this->if_id_reg->update([this]() { this->recordTrace<if_stage_out>(this->if_id_reg, this->id_trace_data); });
+	this->id_exe_reg->update([this]() { this->recordTrace<id_stage_out>(this->id_exe_reg, this->exe_trace_data); });
+	this->exe_mem_reg->update([this]() { this->recordTrace<exe_stage_out>(this->exe_mem_reg, this->mem_trace_data); });
+	this->mem_wb_reg->update([this]() { this->recordTrace<mem_stage_out>(this->mem_wb_reg, this->wb_trace_data); });
 }
 
 void CPU::updateRegisterFile() {
@@ -186,11 +241,11 @@ bool CPU::checkDataHazard(int _rd, std::string _stage) {
 			rs2 = id_reg->inst.a2.reg;
 			break;
 		case SB:
-			rs1 = id_reg->inst.a3.reg;
-			rs2 = id_reg->inst.a1.reg;
+			rs1 = id_reg->inst.a1.reg;
+			rs2 = id_reg->inst.a2.reg;
 			break;
 		case LW:
-			rs1 = id_reg->inst.a3.reg;
+			rs1 = id_reg->inst.a2.reg;
 			rs2 = 0;
 			break;
 		case LUI:
@@ -233,4 +288,68 @@ void CPU::handler(MemRespPacket* _pkt) {
 	CLASS_INFO << "-----------------------";
 }
 
+std::string CPU::instrToString(instr_type op) {
+	switch (op) {
+		case UNIMPL: return "UNIMPL";
+
+		// R-type
+		case ADD: return "ADD";
+		case AND: return "AND";
+		case OR: return "OR";
+		case XOR: return "XOR";
+		case SUB: return "SUB";
+		case SLL: return "SLL";
+		case SRL: return "SRL";
+		case SRA: return "SRA";
+		case SLT: return "SLT";
+		case SLTU: return "SLTU";
+
+		// I-type
+		case ADDI: return "ADDI";
+		case ANDI: return "ANDI";
+		case ORI: return "ORI";
+		case XORI: return "XORI";
+		case SLLI: return "SLLI";
+		case SRLI: return "SRLI";
+		case SRAI: return "SRAI";
+		case SLTI: return "SLTI";
+		case SLTIU: return "SLTIU";
+
+		// Load
+		case LB: return "LB";
+		case LBU: return "LBU";
+		case LH: return "LH";
+		case LHU: return "LHU";
+		case LW: return "LW";
+
+		// Store
+		case SB: return "SB";
+		case SH: return "SH";
+		case SW: return "SW";
+
+		// Branch
+		case BEQ: return "BEQ";
+		case BNE: return "BNE";
+		case BGE: return "BGE";
+		case BGEU: return "BGEU";
+		case BLT: return "BLT";
+		case BLTU: return "BLTU";
+
+		// Jump
+		case JAL: return "JAL";
+		case JALR: return "JALR";
+
+		// Upper / Immediate
+		case AUIPC: return "AUIPC";
+		case LUI: return "LUI";
+
+		// Special
+		case HCF: return "HCF";
+
+		default: return "UNKNOWN";
+	}
+}
+
 void CPU::cleanup() {}
+
+template void CPU::recordTrace<uint32_t>(Register<uint32_t>* reg, std::string inst_name, ChromeTraceData* data);

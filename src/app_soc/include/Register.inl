@@ -65,3 +65,25 @@ void Register<T>::update() {
 	this->is_stall_ = false;
 	this->is_flush_ = false;
 }
+
+template <typename T>
+void Register<T>::update(TraceCallback cb) {
+	if (!this->is_stall_) {
+		this->state_ = (this->state_ == OutEntry::PING) ? OutEntry::PONG : OutEntry::PING;
+
+		if (this->is_flush_) {
+			if (this->state_ == OutEntry::PING) {
+				this->ping_entry_.reset();
+			} else {
+				this->pong_entry_.reset();
+			}
+		}
+
+		cb();
+	}
+
+	this->is_stall_ = false;
+	this->is_flush_ = false;
+
+	// cb();
+}

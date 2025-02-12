@@ -20,6 +20,7 @@
 #include <string>
 
 #include "ACALSim.hh"
+#include "CPU.hh"
 #include "CPUDefs.hh"
 #include "Register.hh"
 
@@ -57,6 +58,10 @@ public:
 	bool getStallStatus() { return this->stall_ma; }
 
 	void updatePC() { this->pc_reg->update(); }
+
+	uint32_t getCurPC() { return *(this->pc_reg->get()); }
+
+	Register<uint32_t>* getPCReg() { return this->pc_reg; }
 
 	void setExeNextPC(std::pair<bool, uint32_t> _exe_next_pc) { this->exe_next_pc = _exe_next_pc; }
 

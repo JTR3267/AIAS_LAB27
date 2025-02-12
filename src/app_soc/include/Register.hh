@@ -31,7 +31,11 @@ public:
 
 	void setStall();
 	void setFlush();
+
 	void update();
+
+	using TraceCallback = std::function<void(void)>;
+	void update(TraceCallback cb);
 
 private:
 	enum class OutEntry { PING, PONG };

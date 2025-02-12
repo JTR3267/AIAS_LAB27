@@ -16,8 +16,6 @@
 
 #include "IFStage.hh"
 
-#include "CPU.hh"
-
 IFStage::IFStage(const std::string& name, Register<if_stage_out>* _if_id_reg)
     : acalsim::SimModule(name),
       if_id_reg(_if_id_reg),
@@ -35,10 +33,11 @@ void IFStage::init() { CLASS_INFO << "IFStage Initialization"; }
 void IFStage::step() {}
 
 void IFStage::execDataPath() {
-	uint32_t current_pc = *(this->pc_reg->get());
+	uint32_t current_pc = this->getCurPC();
 	int      index      = current_pc / 4;
 	if (!this->flush && !this->stall_dh && !this->stall_ma) {
-		const instr& fetch_instr = dynamic_cast<CPU*>(this->getSimulator())->fetchInstr(index);
+		CPU*         cpu         = dynamic_cast<CPU*>(this->getSimulator());
+		const instr& fetch_instr = cpu->fetchInstr(index);
 		CLASS_INFO << "Process instruction at PC = " << current_pc;
 		std::shared_ptr<if_stage_out> infoPtr =
 		    std::make_shared<if_stage_out>(if_stage_out{.pc = current_pc, .inst = fetch_instr});
@@ -49,9 +48,17 @@ void IFStage::execDataPath() {
 		if (this->exe_next_pc.first) {
 			CLASS_INFO << "Fetch jump PC = " << this->exe_next_pc.second;
 			this->pc_reg->set(std::make_shared<uint32_t>(this->exe_next_pc.second));
+			CPU*         cpu         = dynamic_cast<CPU*>(this->getSimulator());
+			int          index       = this->exe_next_pc.second / 4;
+			const instr& fetch_instr = cpu->fetchInstr(index);
+			cpu->recordTrace(this->pc_reg, cpu->instrToString(fetch_instr.op), cpu->getIFTraceData());
 		} else {
 			CLASS_INFO << "Fetch PC + 4 = " << current_pc + 4;
 			this->pc_reg->set(std::make_shared<uint32_t>(current_pc + 4));
+			CPU*         cpu         = dynamic_cast<CPU*>(this->getSimulator());
+			int          index       = (current_pc + 4) / 4;
+			const instr& fetch_instr = cpu->fetchInstr(index);
+			cpu->recordTrace(this->pc_reg, cpu->instrToString(fetch_instr.op), cpu->getIFTraceData());
 		}
 	}
 	if (this->flush) CLASS_INFO << "IFStage flush";

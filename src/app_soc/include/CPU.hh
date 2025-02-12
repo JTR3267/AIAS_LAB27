@@ -32,6 +32,12 @@
 #include "Register.hh"
 #include "packet/MemRespPacket.hh"
 
+struct ChromeTraceData {
+	bool        is_started = false;
+	std::string stage_name;
+	std::string event_name;
+};
+
 /**
  * @brief A class representing a simulator template.
  *
@@ -97,7 +103,17 @@ public:
 
 	void printRegfile();
 
+	template <typename T>
+	void recordTrace(Register<T>* reg, std::string inst_name, ChromeTraceData* data);
+
+	template <typename T>
+	void recordTrace(Register<T>* reg, ChromeTraceData* data);
+
+	std::string instrToString(instr_type op);
+
 	const instr& fetchInstr(int index) { return this->imem->fetchInstr(index); }
+
+	ChromeTraceData* getIFTraceData() { return this->if_trace_data; }
 
 	const uint32_t& readRegister(int index) {
 		CLASS_ASSERT(index >= 0 && index < 32);
@@ -130,6 +146,12 @@ private:
 	Register<id_stage_out>*              id_exe_reg;
 	Register<exe_stage_out>*             exe_mem_reg;
 	Register<mem_stage_out>*             mem_wb_reg;
+
+	ChromeTraceData* if_trace_data;
+	ChromeTraceData* id_trace_data;
+	ChromeTraceData* exe_trace_data;
+	ChromeTraceData* mem_trace_data;
+	ChromeTraceData* wb_trace_data;
 };
 
 #endif  // SRC_APP_SOC_INCLUDE_CPU_HH_
