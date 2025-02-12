@@ -99,7 +99,6 @@ public:
 
 	void checkNextCycleEvent();
 
-<<<<<<< HEAD
 	void printRegfile();
 
 	template <typename T>
@@ -114,24 +113,6 @@ public:
 
 	ChromeTraceData* getIFTraceData() { return this->if_trace_data; }
 
-	const uint32_t& readRegister(int index) {
-		CLASS_ASSERT(index >= 0 && index < 32);
-		return *(this->regs[index].second->get());
-	}
-
-	void writeRegister(int index, uint32_t value) {
-		CLASS_ASSERT(index >= 0 && index < 32);
-		if (index != 0) {
-			this->regs[index].first = true;
-			this->regs[index].second->set(std::make_shared<uint32_t>(value));
-			INFO << "WB Stage write 0x" << std::hex << value << " to register x" << std::dec << index;
-		}
-	}
-
-=======
-	const instr& fetchInstr(int index) { return this->imem->fetchInstr(index); }
-
->>>>>>> c52f28a (feat: Add RegFile class to integrate register file operation in CPU)
 	acalsim::MasterPort* getMasterPort() { return this->m_port; }
 
 	int getDestReg(const instr& _inst);
@@ -167,11 +148,11 @@ public:
 	}
 
 private:
-	ChromeTraceData* if_trace_data;
-	ChromeTraceData* id_trace_data;
-	ChromeTraceData* exe_trace_data;
-	ChromeTraceData* mem_trace_data;
-	ChromeTraceData* wb_trace_data;
+	ChromeTraceData*         if_trace_data;
+	ChromeTraceData*         id_trace_data;
+	ChromeTraceData*         exe_trace_data;
+	ChromeTraceData*         mem_trace_data;
+	ChromeTraceData*         wb_trace_data;
 	InstMemory*              imem;
 	RegFile*                 regs;
 	acalsim::MasterPort*     m_port;

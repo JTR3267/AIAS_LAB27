@@ -371,4 +371,3 @@ void CPU::cleanup() {
 }
 
 template void CPU::recordTrace<uint32_t>(Register<uint32_t>* reg, std::string inst_name, ChromeTraceData* data);
-
