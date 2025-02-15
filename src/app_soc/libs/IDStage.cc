@@ -91,10 +91,10 @@ void IDStage::execDataPath() {
 					rs2_data  = cpu->getRegFile()->readRegister(info->inst.a2.reg);
 					immediate = info->inst.a3.imm;
 					break;
-				case JALR:
+				case JAL:
 					rs1_data  = 0;
-					rs2_data  = info->inst.a2.reg;
-					immediate = info->inst.a3.imm;
+					rs2_data  = 0;
+					immediate = info->inst.a2.imm;
 					break;
 				case LUI:
 					rs1_data  = 0;

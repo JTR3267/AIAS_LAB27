@@ -54,14 +54,14 @@ void IFStage::execDataPath() {
 			CPU*         cpu         = dynamic_cast<CPU*>(this->getSimulator());
 			int          index       = this->exe_next_pc.second / 4;
 			const instr& fetch_instr = cpu->fetchInstr(index);
-			cpu->recordTrace(this->pc_reg, cpu->instrToString(fetch_instr.op), cpu->getIFTraceData());
+			cpu->recordTrace(this->exe_next_pc.second, cpu->instrToString(fetch_instr.op), cpu->getIFTraceData());
 		} else {
 			CLASS_INFO << "Fetch PC + 4 = " << current_pc + 4;
 			this->pc_reg->set(std::make_shared<uint32_t>(current_pc + 4));
 			CPU*         cpu         = dynamic_cast<CPU*>(this->getSimulator());
 			int          index       = (current_pc + 4) / 4;
 			const instr& fetch_instr = cpu->fetchInstr(index);
-			cpu->recordTrace(this->pc_reg, cpu->instrToString(fetch_instr.op), cpu->getIFTraceData());
+			cpu->recordTrace(current_pc + 4, cpu->instrToString(fetch_instr.op), cpu->getIFTraceData());
 		}
 	}
 	if (this->flush) CLASS_INFO << "IFStage flush";

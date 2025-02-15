@@ -1,8 +1,8 @@
 {
   "SOC": {
-    "asm_file_path": "src/app_soc/asm/load_store_simple.txt",
+    "asm_file_path": "src/app_soc/asm/test.txt",
     "memory_size": 65536,
-    "memory_read_latency": 3,
-    "memory_write_latency": 3
+    "memory_read_latency": 2,
+    "memory_write_latency": 2
   }
 }

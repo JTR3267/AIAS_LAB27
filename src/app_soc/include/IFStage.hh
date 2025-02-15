@@ -80,7 +80,10 @@ public:
 		this->stall_ma = true;
 	}
 
-	void setFlush() { this->flush = true; }
+	void setFlush() {
+		this->flush = true;
+		this->pc_reg->clearStall();
+	}
 
 private:
 	Register<if_stage_out>*   if_id_reg;

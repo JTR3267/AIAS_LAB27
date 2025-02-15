@@ -32,6 +32,9 @@ public:
 	void setStall();
 	void setFlush();
 
+	void clearStall();
+	void clearFlush();
+
 	void update();
 
 	using TraceCallback = std::function<void(void)>;

@@ -35,11 +35,6 @@ void EXEStage::execDataPath() {
 		if (info) {
 			// Check for data hazard
 			auto cpu = dynamic_cast<CPU*>(this->getSimulator());
-			if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "EXEStage")) {
-				CLASS_INFO << "Data hazard detected in EXEStage";
-				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
-				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
-			}
 			CLASS_INFO << "Process instruction at PC = " << info->pc;
 			uint32_t                  alu_out_, write_data_;
 			std::pair<bool, uint32_t> branch_compare;
@@ -91,8 +86,15 @@ void EXEStage::execDataPath() {
 				auto if_stage = dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"));
 				if_stage->setExeNextPC(std::make_pair(true, branch_compare.second));
 				if_stage->setFlush();
+				// this->id_exe_reg->setFlush();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setFlush();
 				cpu->getPerfCounter("FlushCount")->counterPlusOne();
+			} else {
+				if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "EXEStage")) {
+					CLASS_INFO << "Data hazard detected in EXEStage";
+					dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
+					dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
+				}
 			}
 			std::shared_ptr<exe_stage_out> infoPtr = std::make_shared<exe_stage_out>(
 			    exe_stage_out{.pc = info->pc, .inst = info->inst, .alu_out = alu_out_, .write_data = write_data_});

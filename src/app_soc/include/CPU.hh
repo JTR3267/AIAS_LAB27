@@ -101,8 +101,7 @@ public:
 
 	void printRegfile();
 
-	template <typename T>
-	void recordTrace(Register<T>* reg, std::string inst_name, ChromeTraceData* data);
+	void recordTrace(uint32_t pc, std::string inst_name, ChromeTraceData* data);
 
 	template <typename T>
 	void recordTrace(Register<T>* reg, ChromeTraceData* data);

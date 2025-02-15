@@ -49,41 +49,45 @@ void Register<T>::setFlush() {
 }
 
 template <typename T>
-void Register<T>::update() {
-	if (!this->is_stall_) {
-		this->state_ = (this->state_ == OutEntry::PING) ? OutEntry::PONG : OutEntry::PING;
-
-		if (this->is_flush_) {
-			if (this->state_ == OutEntry::PING) {
-				this->ping_entry_.reset();
-			} else {
-				this->pong_entry_.reset();
-			}
-		}
-	}
-
+void Register<T>::clearStall() {
 	this->is_stall_ = false;
+}
+
+template <typename T>
+void Register<T>::clearFlush() {
 	this->is_flush_ = false;
 }
 
 template <typename T>
-void Register<T>::update(TraceCallback cb) {
-	if (!this->is_stall_) {
+void Register<T>::update() {
+	if (!this->is_stall_) { this->state_ = (this->state_ == OutEntry::PING) ? OutEntry::PONG : OutEntry::PING; }
+	if (this->is_flush_) {
 		this->state_ = (this->state_ == OutEntry::PING) ? OutEntry::PONG : OutEntry::PING;
-
-		if (this->is_flush_) {
-			if (this->state_ == OutEntry::PING) {
-				this->ping_entry_.reset();
-			} else {
-				this->pong_entry_.reset();
-			}
+		if (this->state_ == OutEntry::PING) {
+			this->ping_entry_.reset();
+		} else {
+			this->pong_entry_.reset();
 		}
-
-		cb();
 	}
 
-	this->is_stall_ = false;
-	this->is_flush_ = false;
+	this->clearStall();
+	this->clearFlush();
+}
 
-	// cb();
+template <typename T>
+void Register<T>::update(TraceCallback cb) {
+	if (!this->is_stall_ || this->is_flush_) {
+		this->state_ = (this->state_ == OutEntry::PING) ? OutEntry::PONG : OutEntry::PING;
+	}
+	if (this->is_flush_) {
+		if (this->state_ == OutEntry::PING) {
+			this->ping_entry_.reset();
+		} else {
+			this->pong_entry_.reset();
+		}
+	}
+	cb();
+
+	this->clearStall();
+	this->clearFlush();
 }

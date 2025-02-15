@@ -68,8 +68,7 @@ void CPU::init() {
 	IFStage* if_stage   = dynamic_cast<IFStage*>(this->getModule("IFStage"));
 	uint32_t current_pc = if_stage->getCurPC();
 	int      index      = current_pc / 4;
-	this->recordTrace<uint32_t>(if_stage->getPCReg(), this->instrToString(this->fetchInstr(index).op),
-	                            this->if_trace_data);
+	this->recordTrace(current_pc, this->instrToString(this->fetchInstr(index).op), this->if_trace_data);
 	// Performance counter
 	// Cycle Count
 	// Count cycles passed.
@@ -133,10 +132,8 @@ void CPU::registerModules() {
 	// Connect SimPort
 }
 
-template <typename T>
-void CPU::recordTrace(Register<T>* reg, std::string inst_name, ChromeTraceData* data) {
-	auto        info            = reg->get();
-	std::string inst_event_name = inst_name + " (pc = " + std::to_string(*info + 4) + ")" + " - " + data->stage_name;
+void CPU::recordTrace(uint32_t pc, std::string inst_name, ChromeTraceData* data) {
+	std::string inst_event_name = inst_name + " (pc = " + std::to_string(pc) + ")" + " - " + data->stage_name;
 	if (data->is_started) {
 		acalsim::top->addChromeTraceRecord(acalsim::ChromeTraceRecord::createDurationEvent(
 		    "E", "CPU", data->event_name, acalsim::top->getGlobalTick(), "", data->stage_name));
@@ -369,5 +366,3 @@ void CPU::cleanup() {
 	this->getRegFile()->printRegfile();
 	this->printPerfCounter();
 }
-
-template void CPU::recordTrace<uint32_t>(Register<uint32_t>* reg, std::string inst_name, ChromeTraceData* data);
