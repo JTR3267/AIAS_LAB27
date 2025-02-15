@@ -36,18 +36,15 @@ void MEMStage::execDataPath() {
 		if (this->resp_pkt) {
 			// Get stall cycle
 			if (this->stall_cycle_begin) {
-				int stall_cycle = (int)(acalsim::top->getGlobalTick() - this->stall_cycle_begin);
-				CLASS_INFO << "Stall cycle due to Data Memory access is " << stall_cycle;
-				auto req_type = this->resp_pkt->getType();
-				auto cpu      = dynamic_cast<CPU*>(this->getSimulator());
+				int  stall_cycle = (int)(acalsim::top->getGlobalTick() - this->stall_cycle_begin);
+				auto req_type    = this->resp_pkt->getType();
+				auto cpu         = dynamic_cast<CPU*>(this->getSimulator());
 				switch (req_type) {
 					case Request::ReqType::WRITE: {
-						CLASS_INFO << "Add stall cycle for write " << stall_cycle;
 						cpu->getPerfCounter("MemWriteStallCycleCount")->counterPlusN(stall_cycle);
 						break;
 					}
 					case Request::ReqType::READ: {
-						CLASS_INFO << "Add stall cycle for read " << stall_cycle;
 						cpu->getPerfCounter("MemReadStallCycleCount")->counterPlusN(stall_cycle);
 						break;
 					}
@@ -59,11 +56,9 @@ void MEMStage::execDataPath() {
 				CLASS_ERROR << "Stall cycle begin is not set in MEM stage";
 			}
 			// Send the data to the WB stage
-			auto info  = std::make_shared<mem_stage_out>();
-			info->pc   = this->exe_mem_reg->get()->pc;
-			info->inst = this->exe_mem_reg->get()->inst;
-			CLASS_INFO << "Process instruction at PC = " << info->pc << ", inst = " << info->inst.op;
-			CLASS_INFO << "Data = 0x" << std::hex << this->resp_pkt->getData();
+			auto info     = std::make_shared<mem_stage_out>();
+			info->pc      = this->exe_mem_reg->get()->pc;
+			info->inst    = this->exe_mem_reg->get()->inst;
 			info->mem_val = {.load_data = this->resp_pkt->getData()};
 			this->mem_wb_reg->set(info);
 			// Set the status to IDLE
@@ -71,26 +66,26 @@ void MEMStage::execDataPath() {
 			// Check for data hazard
 			auto cpu = dynamic_cast<CPU*>(this->getSimulator());
 			if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "MEMStage")) {
-				CLASS_INFO << "Data hazard detected in MEMStage";
 				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 			}
 		} else {
-			CLASS_INFO << "MEMStage stall due to memory access";
 			this->mem_wb_reg->set(nullptr);
 		}
 	} else if (this->status == mem_stage_status::IDLE) {
 		auto info = this->exe_mem_reg->get();
 		if (info) {
-			CLASS_INFO << "Process instruction at PC = " << info->pc << ", inst = " << info->inst.op;
+			auto               cpu     = dynamic_cast<CPU*>(this->getSimulator());
+			std::string        instStr = cpu->instrToString(info->inst.op);
+			std::ostringstream oss;
+			oss << "[PC_MEM ] " << std::setw(10) << std::dec << info->pc << " [Inst] " << instStr;
+			INFO << oss.str();
 			auto inst_type = info->inst.op;
 			if (inst_type == instr_type::SB || inst_type == instr_type::BEQ) {
 				this->checkMemoryAccess(info);
 			} else {
 				// Check for data hazard
-				auto cpu = dynamic_cast<CPU*>(this->getSimulator());
 				if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "MEMStage")) {
-					CLASS_INFO << "Data hazard detected in MEMStage";
 					dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 					dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 				}
@@ -98,7 +93,10 @@ void MEMStage::execDataPath() {
 			}
 		} else {
 			this->mem_wb_reg->set(nullptr);
-			CLASS_INFO << "NOP";
+			std::ostringstream oss;
+			oss << "[PC_MEM ] " << std::setw(10) << std::dec << ""
+			    << " [Inst] NOP";
+			INFO << oss.str();
 		}
 	} else {
 		CLASS_ERROR << "Invalid MEMStage status";
@@ -111,9 +109,7 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 	auto cpu       = dynamic_cast<CPU*>(this->getSimulator());
 	switch (inst_type) {
 		case instr_type::SB: {
-			CLASS_INFO << "SB instruction";
-			auto data = new uint32_t(_info->write_data);
-			CLASS_INFO << "Write data = 0x" << std::hex << *data;
+			auto data   = new uint32_t(_info->write_data);
 			auto memReq = new MemReqPacket("MemReq", Request{.addr = _info->alu_out,
 			                                                 .data = data,
 			                                                 .type = Request::ReqType::WRITE,
@@ -124,7 +120,6 @@ void MEMStage::checkMemoryAccess(std::shared_ptr<exe_stage_out> _info) {
 			break;
 		}
 		case instr_type::LW: {
-			CLASS_INFO << "LW instruction";
 			auto memReq = new MemReqPacket(
 			    "MemReq",
 			    Request{

@@ -34,8 +34,11 @@ void EXEStage::execDataPath() {
 		auto info = this->id_exe_reg->get();
 		if (info) {
 			// Check for data hazard
-			auto cpu = dynamic_cast<CPU*>(this->getSimulator());
-			CLASS_INFO << "Process instruction at PC = " << info->pc;
+			auto               cpu     = dynamic_cast<CPU*>(this->getSimulator());
+			std::string        instStr = cpu->instrToString(info->inst.op);
+			std::ostringstream oss;
+			oss << "[PC_EXE ] " << std::setw(10) << std::dec << info->pc << " [Inst] " << instStr;
+			INFO << oss.str();
 			uint32_t                  alu_out_, write_data_;
 			std::pair<bool, uint32_t> branch_compare;
 			switch (info->inst.op) {
@@ -56,7 +59,6 @@ void EXEStage::execDataPath() {
 					branch_compare.second = info->immediate;
 					write_data_           = 0;
 					alu_out_              = 0;
-					CLASS_INFO << "Detect branch compare instruction, result = " << branch_compare.first;
 					cpu->getPerfCounter("ConditionalBranchCount")->counterPlusOne();
 					if (branch_compare.first) cpu->getPerfCounter("ConditionalBranchHitCount")->counterPlusOne();
 					break;
@@ -71,7 +73,6 @@ void EXEStage::execDataPath() {
 				case SB:
 					alu_out_    = info->rs2_data + info->immediate;
 					write_data_ = info->rs1_data & 0x000000FF;
-					CLASS_INFO << "RS1 data = " << info->rs1_data << ", Write data = " << write_data_;
 					break;
 				case LW:
 					alu_out_    = info->rs2_data + info->immediate;
@@ -86,12 +87,10 @@ void EXEStage::execDataPath() {
 				auto if_stage = dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"));
 				if_stage->setExeNextPC(std::make_pair(true, branch_compare.second));
 				if_stage->setFlush();
-				// this->id_exe_reg->setFlush();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setFlush();
 				cpu->getPerfCounter("FlushCount")->counterPlusOne();
 			} else {
 				if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "EXEStage")) {
-					CLASS_INFO << "Data hazard detected in EXEStage";
 					dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 					dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 				}
@@ -101,10 +100,12 @@ void EXEStage::execDataPath() {
 			this->exe_mem_reg->set(infoPtr);
 		} else {
 			this->exe_mem_reg->set(nullptr);
-			CLASS_INFO << "NOP";
+			std::ostringstream oss;
+			oss << "[PC_EXE ] " << std::setw(10) << std::dec << ""
+			    << " [Inst] NOP";
+			INFO << oss.str();
 		}
 	} else {
-		CLASS_INFO << "EXEStage stall due to memory access";
 		this->exe_mem_reg->set(nullptr);
 	}
 }

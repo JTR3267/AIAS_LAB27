@@ -99,8 +99,6 @@ public:
 
 	void checkNextCycleEvent();
 
-	void printRegfile();
-
 	void recordTrace(uint32_t pc, std::string inst_name, ChromeTraceData* data);
 
 	template <typename T>

@@ -266,10 +266,7 @@ bool CPU::checkDataHazard(int _rd, std::string _stage) {
 			rs2 = 0;
 			break;
 	}
-	if (id_reg) {
-		CLASS_INFO << "Detect IDStage rd = " << _rd << ", " << _stage << " rs1 = " << rs1 << " rs2 = " << rs2;
-		return (_rd == rs1 || _rd == rs2) && (_rd != 0);
-	}
+	if (id_reg) { return (_rd == rs1 || _rd == rs2) && (_rd != 0); }
 	return false;
 }
 

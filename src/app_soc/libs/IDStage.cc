@@ -38,7 +38,11 @@ void IDStage::execDataPath() {
 
 	if (!this->flush && !this->stall_dh && !this->stall_ma) {
 		if (info) {
-			CLASS_INFO << "Process instruction at PC = " << info->pc;
+			auto               cpu     = dynamic_cast<CPU*>(this->getSimulator());
+			std::string        instStr = cpu->instrToString(info->inst.op);
+			std::ostringstream oss;
+			oss << "[PC_ID  ] " << std::setw(10) << std::dec << info->pc << " [Inst] " << instStr;
+			INFO << oss.str();
 			switch (info->inst.op) {
 				case ADD:
 				case SUB:
@@ -84,7 +88,6 @@ void IDStage::execDataPath() {
 					rs1_data  = cpu->getRegFile()->readRegister(info->inst.a1.reg);
 					rs2_data  = cpu->getRegFile()->readRegister(info->inst.a2.reg);
 					immediate = info->inst.a3.imm;
-					CLASS_INFO << "RS1 data = " << rs1_data << ", RS2 data = " << rs2_data;
 					break;
 				case LW:
 					rs1_data  = 0;
@@ -102,7 +105,6 @@ void IDStage::execDataPath() {
 					immediate = info->inst.a2.imm;
 					break;
 				case HCF:
-					CLASS_INFO << "Encountered HCF!";
 					rs1_data  = 0;
 					rs2_data  = 0;
 					immediate = 0;
@@ -123,14 +125,13 @@ void IDStage::execDataPath() {
 			this->id_exe_reg->set(infoPtr);
 		} else {
 			this->id_exe_reg->set(nullptr);
-			CLASS_INFO << "NOP";
+			std::ostringstream oss;
+			oss << "[PC_ID  ] " << std::setw(10) << std::dec << ""
+			    << " [Inst] NOP";
+			INFO << oss.str();
 		}
 	} else {
 		// Pass nullptr when stall/flush status detects
 		this->id_exe_reg->set(nullptr);
 	}
-
-	if (this->flush) CLASS_INFO << "IDStage flush";
-	if (this->stall_dh) CLASS_INFO << "IDStage stall due to data hazard";
-	if (this->stall_ma) CLASS_INFO << "IDStage stall due to memory access";
 }

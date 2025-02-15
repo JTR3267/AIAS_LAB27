@@ -220,7 +220,6 @@ public:
 		if (index != 0) {
 			this->regs[index].first = true;
 			this->regs[index].second->set(std::make_shared<uint32_t>(value));
-			INFO << "WB Stage write 0x" << std::hex << value << " to register x" << std::dec << index;
 		}
 	}
 

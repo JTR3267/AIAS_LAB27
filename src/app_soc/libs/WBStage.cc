@@ -16,6 +16,9 @@
 
 #include "WBStage.hh"
 
+#include <iomanip>  // for std::setw, std::setfill
+#include <sstream>  // for std::ostringstream
+
 #include "IDStage.hh"
 #include "IFStage.hh"
 
@@ -31,11 +34,14 @@ void WBStage::step() {}
 void WBStage::execDataPath() {
 	auto info = this->mem_wb_reg->get();
 	if (info) {
-		CLASS_INFO << "Process instruction at PC = " << info->pc << ", inst = " << info->inst.op;
+		auto               cpu     = dynamic_cast<CPU*>(this->getSimulator());
+		std::string        instStr = cpu->instrToString(info->inst.op);
+		std::ostringstream oss;
+		oss << "[PC_WB  ] " << std::setw(10) << std::dec << info->pc << " [Inst] " << instStr;
+		INFO << oss.str();
+
 		// Check for data hazard
-		auto cpu = dynamic_cast<CPU*>(this->getSimulator());
 		if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "WBStage")) {
-			CLASS_INFO << "Data hazard detected in WBStage";
 			dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 			dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();
 		}
@@ -63,7 +69,10 @@ void WBStage::execDataPath() {
 		}
 		cpu->getPerfCounter("CommittedInstructionCount")->counterPlusOne();
 	} else {
-		CLASS_INFO << "NOP";
+		std::ostringstream oss;
+		oss << "[PC_WB  ] " << std::setw(10) << std::dec << ""
+		    << " [Inst] NOP";
+		INFO << oss.str();
 	}
 }
 
