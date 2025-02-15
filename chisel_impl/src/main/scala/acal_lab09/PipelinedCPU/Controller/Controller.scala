@@ -111,7 +111,7 @@ class Controller(memAddrWidth: Int) extends Module {
 
   // pc predict miss signal
   val Predict_Miss = Wire(Bool())
-  Predict_Miss := (E_En && E_Branch_taken && io.ID_pc=/=io.EXE_target_pc)
+  Predict_Miss := (E_En && E_Branch_taken)
 
   // Control signal - PC
   when(Predict_Miss){
