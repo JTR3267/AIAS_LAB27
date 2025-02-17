@@ -1,5 +1,8 @@
 ### Customized ###
 
+# Trace path
+trace/
+
 # Build path
 build/
 

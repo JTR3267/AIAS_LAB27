@@ -164,8 +164,10 @@ public:
 	void counterPlusOne() { this->counter++; }
 	// API to plus more than 1
 	void counterPlusN(int _n) { this->counter += _n; }
+	// Get the counter value
+	int getCounter() { return this->counter; }
 	// Log the counter value in one line
-	void printCounterInfo() { INFO << this->name << " = " << this->counter; }
+	void printCounterInfo() { INFO << "[" << this->name << " ]    " << this->counter; }
 
 private:
 	std::string name;

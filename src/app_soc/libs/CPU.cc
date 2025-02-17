@@ -189,8 +189,23 @@ void CPU::updatePipeRegisters() {
 }
 
 void CPU::printPerfCounter() {
-	INFO << "============ Print Performance Counter ============";
+	INFO << "==============================================================";
+	INFO << "Performance Counter:";
 	for (auto& it : this->counters) { it.second.printCounterInfo(); }
+	INFO << "==============================================================";
+	INFO << "Performance Analysis:";
+	INFO << "[CPI ]    "
+	     << static_cast<double>(this->getPerfCounter("FetchedInstructionCount")->getCounter()) /
+	            static_cast<double>(acalsim::top->getGlobalTick());
+	INFO << "[Average Mem Read Request Stall Cycle ]    "
+	     << static_cast<double>(this->getPerfCounter("MemReadStallCycleCount")->getCounter()) /
+	            static_cast<double>(this->getPerfCounter("MemReadRequestCount")->getCounter());
+	INFO << "[Average Mem Write Request Stall Cycle ]    "
+	     << static_cast<double>(this->getPerfCounter("MemWriteStallCycleCount")->getCounter()) /
+	            static_cast<double>(this->getPerfCounter("MemWriteRequestCount")->getCounter());
+	INFO << "[Total Bus bandwidth requirement ]    "
+	     << this->getPerfCounter("MemReadBandwidthRequirement")->getCounter() +
+	            this->getPerfCounter("MemWriteBandwidthRequirement")->getCounter();
 }
 
 void CPU::updateStatus() {
@@ -289,7 +304,7 @@ void CPU::handler(MemRespPacket* _pkt) {
 	// Update the state of MEM stage about the received packet
 	dynamic_cast<MEMStage*>(this->getModule("MEMStage"))->setRespPkt(_pkt);
 
-	CLASS_INFO << "----------- MemRespPacket received at CPU -----------";
+	CLASS_INFO << "----------- MemRespPacket received by CPU -----------";
 	// Run the internal logic of all stages
 	this->execDataPath();
 	this->updateSystemStates();
