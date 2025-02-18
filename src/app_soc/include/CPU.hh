@@ -120,6 +120,8 @@ public:
 
 	RegFile* getRegFile() { return this->regs; }
 
+	void printPerfAnalysis();
+
 	void printPerfCounter();
 
 	void printPerfCounterValue(const std::string& _name) { this->counters.find(_name)->second.printCounterInfo(); }

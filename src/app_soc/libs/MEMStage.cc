@@ -36,7 +36,7 @@ void MEMStage::execDataPath() {
 		if (this->resp_pkt) {
 			// Get stall cycle
 			if (this->stall_cycle_begin) {
-				int  stall_cycle = (int)(acalsim::top->getGlobalTick() - this->stall_cycle_begin);
+				int  stall_cycle = (int)(acalsim::top->getGlobalTick() - this->stall_cycle_begin) + 1;
 				auto req_type    = this->resp_pkt->getType();
 				auto cpu         = dynamic_cast<CPU*>(this->getSimulator());
 				switch (req_type) {
@@ -61,10 +61,15 @@ void MEMStage::execDataPath() {
 			info->inst    = this->exe_mem_reg->get()->inst;
 			info->mem_val = {.load_data = this->resp_pkt->getData()};
 			this->mem_wb_reg->set(info);
+
+			auto               cpu     = dynamic_cast<CPU*>(this->getSimulator());
+			std::string        instStr = cpu->instrToString(info->inst.op);
+			std::ostringstream oss;
+			oss << "[PC_MEM ] " << std::setw(10) << std::dec << info->pc << " [Inst] " << instStr;
+			INFO << oss.str();
 			// Set the status to IDLE
 			this->setStatus(mem_stage_status::IDLE);
 			// Check for data hazard
-			auto cpu = dynamic_cast<CPU*>(this->getSimulator());
 			if (cpu->checkDataHazard(cpu->getDestReg(info->inst), "MEMStage")) {
 				dynamic_cast<IFStage*>(this->getSimulator()->getModule("IFStage"))->setStallDH();
 				dynamic_cast<IDStage*>(this->getSimulator()->getModule("IDStage"))->setStallDH();

@@ -38,6 +38,9 @@ class top extends Module {
         val EXE_Branch = Output(Bool())
         val Mem_R = Output(Bool())
         val Mem_W = Output(Bool())
+        val Commit_Instr = Output(Bool())
+        val Resp_From_DMem = Output(Bool())
+        val Fetch_Instr = Output(Bool())
     })
 
     val cpu = Module(new PiplinedCPU(15,32))
@@ -83,6 +86,9 @@ class top extends Module {
     io.EXE_Branch := cpu.io.EXE_Branch
     io.Mem_R := cpu.io.Mem_R
     io.Mem_W := cpu.io.Mem_W
+    io.Commit_Instr := cpu.io.Commit_Instr
+    io.Resp_From_DMem := cpu.io.Resp_From_DMem
+    io.Fetch_Instr := cpu.io.Fetch_Instr
 }
 
 

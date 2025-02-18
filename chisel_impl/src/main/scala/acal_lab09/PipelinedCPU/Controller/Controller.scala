@@ -63,6 +63,8 @@ class Controller(memAddrWidth: Int) extends Module {
     val W_WBSel = Output(UInt(2.W))
 
     val Hcf = Output(Bool())
+    val Commit_Instr = Output(Bool())
+    val Fetch_Instr = Output(Bool())
   })
   // Inst Decode for each stage
   val IF_opcode = io.IF_Inst(6, 0)
@@ -182,7 +184,7 @@ class Controller(memAddrWidth: Int) extends Module {
     BRANCH -> ADD,    // PC  + imm
     JALR   -> ADD,    // rs1 + imm
     JAL    -> ADD,    // PC  + imm
-    OP_IMM -> Mux(EXE_funct3 === 5.U, 
+    OP_IMM -> Mux(EXE_funct3 === 5.U,
               (Cat(EXE_funct7, "b11111".U, EXE_funct3)),    // srli or srai
               (Cat(0.U(7.W),   "b11111".U, EXE_funct3))),   // others
     OP     -> (Cat(EXE_funct7, "b11111".U, EXE_funct3)),
@@ -242,6 +244,8 @@ class Controller(memAddrWidth: Int) extends Module {
 
   // Control signal - Others
   io.Hcf := (WB_opcode === HCF)
+  io.Commit_Instr := (io.WB_Inst =/= 0.U)
+  io.Fetch_Instr := (io.IF_Inst =/= 0.U) && !(io.Stall_EXE_ID_DH | io.Stall_MEM_ID_DH | io.Stall_WB_ID_DH) && !io.Stall_MA && !io.Flush_BH
 
   /****************** Data Hazard ******************/
   // Use rs in ID stage

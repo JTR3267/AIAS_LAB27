@@ -44,6 +44,9 @@ class PiplinedCPU(memAddrWidth: Int, memDataWidth: Int) extends Module {
         val EXE_Branch = Output(Bool())
         val Mem_R = Output(Bool())
         val Mem_W = Output(Bool())
+        val Commit_Instr = Output(Bool())
+        val Resp_From_DMem = Output(Bool())
+        val Fetch_Instr = Output(Bool())
     })
     /*****  Pipeline Stages Registers Module for holding data *****/
     // stage Registers
@@ -194,4 +197,7 @@ class PiplinedCPU(memAddrWidth: Int, memDataWidth: Int) extends Module {
     io.EXE_Branch := (stage_EXE.io.inst(6, 0)===BRANCH)
     io.Mem_R := io.DataMem.Mem_R
     io.Mem_W := io.DataMem.Mem_W
+    io.Commit_Instr := controller.io.Commit_Instr
+    io.Fetch_Instr := controller.io.Fetch_Instr
+    io.Resp_From_DMem := io.DataMem.Valid
 }

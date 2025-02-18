@@ -77,6 +77,9 @@ void CPU::init() {
 	// Fetched Instruction Count
 	// Count instruction fetched in IF-stage.
 	this->createPerfCounter("FetchedInstructionCount");
+	// Committed Instruction Count
+	// Count the instructions finished by the CPU.
+	this->createPerfCounter("CommittedInstructionCount");
 	// Conditional Branch(Bxx) Count
 	// Count B-type instructions executed in EXE-stage.
 	this->createPerfCounter("ConditionalBranchCount");
@@ -110,9 +113,6 @@ void CPU::init() {
 	// Mem Write Bandwidth Requirement (in Byte)
 	// Count bytes write in Store-type instruction (sw/sh/sb - all 4 bytes are occupied).
 	this->createPerfCounter("MemWriteBandwidthRequirement");
-	// Committed Instruction Count
-	// Count the instructions finished by the CPU.
-	this->createPerfCounter("CommittedInstructionCount");
 }
 
 void CPU::registerModules() {
@@ -191,19 +191,34 @@ void CPU::updatePipeRegisters() {
 void CPU::printPerfCounter() {
 	INFO << "==============================================================";
 	INFO << "Performance Counter:";
-	for (auto& it : this->counters) { it.second.printCounterInfo(); }
+	this->getPerfCounter("FetchedInstructionCount")->printCounterInfo();
+	this->getPerfCounter("CommittedInstructionCount")->printCounterInfo();
+	this->getPerfCounter("ConditionalBranchCount")->printCounterInfo();
+	this->getPerfCounter("ConditionalBranchHitCount")->printCounterInfo();
+	this->getPerfCounter("UnconditionalBranchCount")->printCounterInfo();
+	this->getPerfCounter("UnconditionalBranchHitCount")->printCounterInfo();
+	this->getPerfCounter("FlushCount")->printCounterInfo();
+	this->getPerfCounter("MemReadStallCycleCount")->printCounterInfo();
+	this->getPerfCounter("MemWriteStallCycleCount")->printCounterInfo();
+	this->getPerfCounter("MemReadRequestCount")->printCounterInfo();
+	this->getPerfCounter("MemWriteRequestCount")->printCounterInfo();
+	this->getPerfCounter("MemReadBandwidthRequirement")->printCounterInfo();
+	this->getPerfCounter("MemWriteBandwidthRequirement")->printCounterInfo();
+}
+
+void CPU::printPerfAnalysis() {
 	INFO << "==============================================================";
 	INFO << "Performance Analysis:";
-	INFO << "[CPI ]    "
-	     << static_cast<double>(this->getPerfCounter("FetchedInstructionCount")->getCounter()) /
-	            static_cast<double>(acalsim::top->getGlobalTick());
-	INFO << "[Average Mem Read Request Stall Cycle ]    "
+	INFO << "[CPI ] "
+	     << static_cast<double>(acalsim::top->getGlobalTick() - 1) /
+	            static_cast<double>(this->getPerfCounter("FetchedInstructionCount")->getCounter());
+	INFO << "[Average Mem Read Request Stall Cycle ] "
 	     << static_cast<double>(this->getPerfCounter("MemReadStallCycleCount")->getCounter()) /
 	            static_cast<double>(this->getPerfCounter("MemReadRequestCount")->getCounter());
-	INFO << "[Average Mem Write Request Stall Cycle ]    "
+	INFO << "[Average Mem Write Request Stall Cycle ] "
 	     << static_cast<double>(this->getPerfCounter("MemWriteStallCycleCount")->getCounter()) /
 	            static_cast<double>(this->getPerfCounter("MemWriteRequestCount")->getCounter());
-	INFO << "[Total Bus bandwidth requirement ]    "
+	INFO << "[Total Bus bandwidth requirement ] "
 	     << this->getPerfCounter("MemReadBandwidthRequirement")->getCounter() +
 	            this->getPerfCounter("MemWriteBandwidthRequirement")->getCounter();
 }
@@ -225,7 +240,6 @@ void CPU::checkNextCycleEvent() {
 		auto event = rc->acquire<CPUSingleIterationEvent>(&CPUSingleIterationEvent::renew, this);
 		this->scheduleEvent(event, acalsim::top->getGlobalTick() + 1);
 	} else if (hcf) {
-		this->getPerfCounter("CommittedInstructionCount")->counterPlusOne();
 		CLASS_INFO << "HCF instruction detected in WB stage. Simulation ends.";
 	}
 }
@@ -377,4 +391,5 @@ void CPU::cleanup() {
 	INFO << "CPU Simulation is done";
 	this->getRegFile()->printRegfile();
 	this->printPerfCounter();
+	this->printPerfAnalysis();
 }

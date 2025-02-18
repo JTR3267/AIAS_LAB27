@@ -133,5 +133,9 @@ void IDStage::execDataPath() {
 	} else {
 		// Pass nullptr when stall/flush status detects
 		this->id_exe_reg->set(nullptr);
+		std::ostringstream oss;
+		oss << "[PC_ID  ] " << std::setw(10) << std::dec << ""
+		    << " [Inst] NOP";
+		INFO << oss.str();
 	}
 }

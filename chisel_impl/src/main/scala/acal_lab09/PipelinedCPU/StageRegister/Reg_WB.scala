@@ -26,12 +26,7 @@ class Reg_WB(addrWidth:Int) extends Module {
     val ld_data_Reg = RegInit(0.U(32.W))
 
     /*** stage Registers Action ***/
-    when(io.Stall){
-        pc_plus4_Reg := pc_plus4_Reg
-        InstReg := InstReg
-        alu_out_Reg := alu_out_Reg
-        ld_data_Reg := ld_data_Reg
-    }.elsewhen(io.Stall_MA){
+    when(io.Stall_MA){
         pc_plus4_Reg := 0.U(addrWidth.W)
         InstReg := 0.U(32.W)
         alu_out_Reg := 0.U(32.W)
