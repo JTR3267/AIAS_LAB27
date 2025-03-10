@@ -32,6 +32,8 @@ public:
 	void step() override;
 	void cleanup() override {}
 	void instPacketHandler(Tick when, SimPacket* pkt);
+	int  getDestReg(const instr& _inst);
+	bool checkDataHazard(int _rd, const instr& _inst);
 
 private:
 	InstPacket* EXEInstPacket = nullptr;
