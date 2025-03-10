@@ -16,6 +16,57 @@
 
 #include "IFStage.hh"
 
+int IFStage::getDestReg(const instr& _inst) {
+	auto type = _inst.op;
+	int  rd;
+	switch (type) {
+		case ADD:
+		case ADDI:
+		case LW:
+		case LUI:
+		case JAL: rd = _inst.a1.reg; break;
+		case BEQ:
+		case SB:
+		default: rd = 0; break;
+	}
+	return rd;
+}
+
+bool IFStage::checkDataHazard(int _rd, const instr& _inst) {
+	auto type = _inst.op;
+	int  rs1;
+	int  rs2;
+	switch (type) {
+		case ADD:
+			rs1 = _inst.a2.reg;
+			rs2 = _inst.a3.reg;
+			break;
+		case ADDI:
+			rs1 = _inst.a2.reg;
+			rs2 = 0;
+			break;
+		case BEQ:
+			rs1 = _inst.a1.reg;
+			rs2 = _inst.a2.reg;
+			break;
+		case SB:
+			rs1 = _inst.a1.reg;
+			rs2 = _inst.a2.reg;
+			break;
+		case LW:
+			rs1 = _inst.a2.reg;
+			rs2 = 0;
+			break;
+		case LUI:
+		case JAL:
+		default:
+			rs1 = 0;
+			rs2 = 0;
+			break;
+	}
+	return (_rd == rs1 || _rd == rs2) && (_rd != 0);
+}
+
 void IFStage::step() {
 	// Only move forward when
 	// 1. the incoming slave port has instruction ready
@@ -27,18 +78,13 @@ void IFStage::step() {
 		InstPacket* instPacket = ((InstPacket*)this->getSlavePort("soc-s")->front());
 
 		// IF, EXE hazard
-		dataHazard =
-		    EXEInstPacket && (instPacket->inst.a2.type == OPTYPE_REG && EXEInstPacket->inst.a1.type == OPTYPE_REG &&
-		                          instPacket->inst.a2.reg == EXEInstPacket->inst.a1.reg ||
-		                      instPacket->inst.a3.type == OPTYPE_REG && EXEInstPacket->inst.a1.type == OPTYPE_REG &&
-		                          instPacket->inst.a3.reg == EXEInstPacket->inst.a1.reg);
-
+		auto EXEDestReg = EXEInstPacket ? this->getDestReg(EXEInstPacket->inst) : 0;
 		// IF, WB hazard
-		dataHazard |=
-		    WBInstPacket && (instPacket->inst.a2.type == OPTYPE_REG && WBInstPacket->inst.a1.type == OPTYPE_REG &&
-		                         instPacket->inst.a2.reg == WBInstPacket->inst.a1.reg ||
-		                     instPacket->inst.a3.type == OPTYPE_REG && WBInstPacket->inst.a1.type == OPTYPE_REG &&
-		                         instPacket->inst.a3.reg == WBInstPacket->inst.a1.reg);
+		auto WBDestReg = WBInstPacket ? this->getDestReg(WBInstPacket->inst) : 0;
+
+		if (instPacket)
+			dataHazard = (EXEInstPacket && this->checkDataHazard(EXEDestReg, instPacket->inst)) ||
+			             (WBInstPacket && this->checkDataHazard(WBDestReg, instPacket->inst));
 	}
 	bool controlHazard = false;
 	if (EXEInstPacket) { controlHazard = EXEInstPacket->isTakenBranch; }

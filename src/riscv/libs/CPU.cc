@@ -177,7 +177,10 @@ void CPU::retrySendInstPacket(MasterPort* mp) {
 		           << " is completed at Tick = " << acalsim::top->getGlobalTick()
 		           << " | PC = " << pendingInstPacket->pc;
 
-		if (pendingInstPacket->inst.op == HCF) return;
+		if (pendingInstPacket->inst.op == HCF) {
+			pendingInstPacket = nullptr;
+			return;
+		}
 
 		// send the instruction packet to the IF stage successfully
 		// schedule the next trigger event
