@@ -17,7 +17,9 @@
 #include "InstPacket.hh"
 
 #include "EXEStage.hh"
+#include "IDStage.hh"
 #include "IFStage.hh"
+#include "MEMStage.hh"
 #include "WBStage.hh"
 
 void InstPacket::visit(acalsim::Tick _when, acalsim::SimModule& _module) {
@@ -27,7 +29,11 @@ void InstPacket::visit(acalsim::Tick _when, acalsim::SimModule& _module) {
 void InstPacket::visit(acalsim::Tick _when, acalsim::SimBase& _simulator) {
 	if (auto sim = dynamic_cast<IFStage*>(&_simulator)) {
 		sim->instPacketHandler(_when, this);
+	} else if (auto sim = dynamic_cast<IDStage*>(&_simulator)) {
+		sim->instPacketHandler(_when, this);
 	} else if (auto sim = dynamic_cast<EXEStage*>(&_simulator)) {
+		sim->instPacketHandler(_when, this);
+	} else if (auto sim = dynamic_cast<MEMStage*>(&_simulator)) {
 		sim->instPacketHandler(_when, this);
 	} else if (auto sim = dynamic_cast<WBStage*>(&_simulator)) {
 		sim->instPacketHandler(_when, this);

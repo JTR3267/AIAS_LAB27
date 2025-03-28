@@ -100,12 +100,12 @@ void CPU::processInstr(const instr& _i, InstPacket* instPacket) {
 			break;
 
 		case JAL:
-			rf_ref[_i.a1.reg] = this->pc + 4;
-			pc_next           = _i.a2.imm;
+			if (_i.a1.reg != 0) rf_ref[_i.a1.reg] = this->pc + 4;
+			pc_next = _i.a2.imm;
 			break;
 		case JALR:
-			rf_ref[_i.a1.reg] = this->pc + 4;
-			pc_next           = rf_ref[_i.a2.reg] + _i.a3.imm;
+			if (_i.a1.reg != 0) rf_ref[_i.a1.reg] = this->pc + 4;
+			pc_next = rf_ref[_i.a2.reg] + _i.a3.imm;
 			break;
 		case AUIPC: rf_ref[_i.a1.reg] = this->pc + (_i.a2.imm << 12); break;
 		case LUI: rf_ref[_i.a1.reg] = (_i.a2.imm << 12); break;

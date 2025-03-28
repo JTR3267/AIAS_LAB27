@@ -39,7 +39,10 @@ set(LIBS_SRCS
     SOC.cc
     TopPipeRegisterManager.cc
     IFStage.cc
+    IDStage.cc
     EXEStage.cc
+    MEMStage.cc
+    InstrParse.cc
 )
 # ##########################################################################
 # # Build rules

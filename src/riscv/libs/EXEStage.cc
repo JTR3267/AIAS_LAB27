@@ -20,36 +20,35 @@ void EXEStage::step() {
 	// Only move forward when
 	// 1. the incoming slave port has instruction ready
 	// 2. the downstream pipeline register is available
-	Tick currTick = top->getGlobalTick();
-
 	InstPacket* inboundPacket = nullptr;
 
 	// check hazards
 	bool controlHazard = false;
-	if (this->getPipeRegister("prIF2EXE-out")->isValid()) {
-		InstPacket* instPacket = ((InstPacket*)this->getPipeRegister("prIF2EXE-out")->value());
+	if (this->getPipeRegister("prID2EXE-out")->isValid()) {
+		InstPacket* instPacket = ((InstPacket*)this->getPipeRegister("prID2EXE-out")->value());
 		controlHazard          = instPacket->isTakenBranch;
 		inboundPacket          = instPacket;
 	}
 
 	if (inboundPacket)
-		CLASS_INFO << "   EXEStage step() an InstPacket @PC=" << inboundPacket->pc
+		CLASS_INFO << "  EXEStage step() an InstPacket @PC=" << inboundPacket->pc
 		           << " controlHazard: " << (controlHazard ? "Yes" : "No");
 	else
-		CLASS_INFO << "   EXEStage step(), no inbound packet";
+		CLASS_INFO << "  EXEStage step(), no inbound packet";
 
-	if (this->getPipeRegister("prIF2EXE-out")->isValid() && !this->getPipeRegister("prEXE2WB-in")->isStalled()) {
-		SimPacket* pkt = this->getPipeRegister("prIF2EXE-out")->pop();
+	if (this->getPipeRegister("prID2EXE-out")->isValid() && !this->getPipeRegister("prEXE2MEM-in")->isStalled()) {
+		SimPacket* pkt = this->getPipeRegister("prID2EXE-out")->pop();
 		// process tht packet regardless whether it has control hazard or not
-		this->accept(currTick, *pkt);
+		this->accept(top->getGlobalTick(), *pkt);
 	}
 }
 
 void EXEStage::instPacketHandler(Tick when, SimPacket* pkt) {
-	CLASS_INFO << "   EXEStage::instPacketHandler()  has received and an InstPacket @PC=" << ((InstPacket*)pkt)->pc
-	           << " from prIF2EXE-out and push it to prEXE2WB-in";
+	CLASS_INFO << "  EXEStage::instPacketHandler()  has received and an InstPacket @PC=" << ((InstPacket*)pkt)->pc
+	           << " from prID2EXE-out and push it to prEXE2MEM-in";
 
-	// push to the prEXE2WB register
-	if (!this->getPipeRegister("prEXE2WB-in")->push(pkt)) { CLASS_ERROR << "EXEStage failed to handle an InstPacket!"; }
-	WBInstPacket = (InstPacket*)pkt;
+	// push to the prEXE2MEM register
+	if (!this->getPipeRegister("prEXE2MEM-in")->push(pkt)) {
+		CLASS_ERROR << "EXEStage failed to handle an InstPacket!";
+	}
 }

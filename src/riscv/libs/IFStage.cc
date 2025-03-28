@@ -16,105 +16,72 @@
 
 #include "IFStage.hh"
 
-int IFStage::getDestReg(const instr& _inst) {
-	auto type = _inst.op;
-	int  rd;
-	switch (type) {
-		case ADD:
-		case ADDI:
-		case LW:
-		case LUI:
-		case JAL: rd = _inst.a1.reg; break;
-		case BEQ:
-		case SB:
-		default: rd = 0; break;
-	}
-	return rd;
-}
-
-bool IFStage::checkDataHazard(int _rd, const instr& _inst) {
-	auto type = _inst.op;
-	int  rs1;
-	int  rs2;
-	switch (type) {
-		case ADD:
-			rs1 = _inst.a2.reg;
-			rs2 = _inst.a3.reg;
-			break;
-		case ADDI:
-			rs1 = _inst.a2.reg;
-			rs2 = 0;
-			break;
-		case BEQ:
-			rs1 = _inst.a1.reg;
-			rs2 = _inst.a2.reg;
-			break;
-		case SB:
-			rs1 = _inst.a1.reg;
-			rs2 = _inst.a2.reg;
-			break;
-		case LW:
-			rs1 = _inst.a2.reg;
-			rs2 = 0;
-			break;
-		case LUI:
-		case JAL:
-		default:
-			rs1 = 0;
-			rs2 = 0;
-			break;
-	}
-	return (_rd == rs1 || _rd == rs2) && (_rd != 0);
-}
+#include "InstrParse.hh"
 
 void IFStage::step() {
-	// Only move forward when
-	// 1. the incoming slave port has instruction ready
-	// 2. the downstream pipeline register is available
+	if (branchStall) {
+		CLASS_INFO << "   IFStage step() : branchStall is true, skip this step";
 
-	// check hazards
-	bool dataHazard = false;
-	if (this->getSlavePort("soc-s")->isPopValid()) {
-		InstPacket* instPacket = ((InstPacket*)this->getSlavePort("soc-s")->front());
+		this->forceStepInNextIteration();
 
-		// IF, EXE hazard
-		auto EXEDestReg = EXEInstPacket ? this->getDestReg(EXEInstPacket->inst) : 0;
-		// IF, WB hazard
-		auto WBDestReg = WBInstPacket ? this->getDestReg(WBInstPacket->inst) : 0;
-
-		if (instPacket)
-			dataHazard = (EXEInstPacket && this->checkDataHazard(EXEDestReg, instPacket->inst)) ||
-			             (WBInstPacket && this->checkDataHazard(WBDestReg, instPacket->inst));
+		WBInstPacket  = MEMInstPacket;
+		MEMInstPacket = EXEInstPacket;
+		EXEInstPacket = nullptr;
+		branchStall   = false;
+		return;
 	}
+
+	// check dataHazard
+	bool dataHazard = false;
+	if (IDInstPacket) {
+		// ID, EXE hazard
+		auto EXEDestReg = EXEInstPacket ? getDestReg(EXEInstPacket->inst) : 0;
+		// ID, MEM hazard
+		auto MEMDestReg = MEMInstPacket ? getDestReg(MEMInstPacket->inst) : 0;
+		// ID, WB hazard
+		auto WBDestReg = WBInstPacket ? getDestReg(WBInstPacket->inst) : 0;
+
+		dataHazard = (EXEInstPacket && checkDataHazard(EXEDestReg, IDInstPacket->inst)) ||
+		             (MEMInstPacket && checkDataHazard(MEMDestReg, IDInstPacket->inst)) ||
+		             (WBInstPacket && checkDataHazard(WBDestReg, IDInstPacket->inst));
+	}
+
+	// check controlHazard
 	bool controlHazard = false;
 	if (EXEInstPacket) { controlHazard = EXEInstPacket->isTakenBranch; }
 
-	Tick currTick = top->getGlobalTick();
 	if (this->getSlavePort("soc-s")->isPopValid()) {
 		CLASS_INFO << "   IFStage step() : has an inbound  InstPacket availble ";
 
 		if (!dataHazard && !controlHazard) {
 			CLASS_INFO << "   IFStage step() :  popped an InstPacket";
 			SimPacket* pkt = this->getSlavePort("soc-s")->pop();
-			this->accept(currTick, *pkt);
-
+			this->accept(top->getGlobalTick(), *pkt);
 		} else {
-			WBInstPacket  = EXEInstPacket;
-			EXEInstPacket = nullptr;
-			// There are still pending request but no new input in the next cycle
-			this->forceStepInNextIteration();
 			if (dataHazard) CLASS_INFO << "   IFStage step() :  data Hazard detected. Stall IFStage";
-			if (controlHazard) CLASS_INFO << "   IFStage step() :  control Hazard detected. Stall IFStage";
+			if (controlHazard) {
+				CLASS_INFO << "   IFStage step() :  control Hazard detected. Stall IFStage";
+				branchStall = true;
+			}
+
+			this->forceStepInNextIteration();
+
+			WBInstPacket  = MEMInstPacket;
+			MEMInstPacket = EXEInstPacket;
+			EXEInstPacket = nullptr;
 		}
 	}
 }
 
 void IFStage::instPacketHandler(Tick when, SimPacket* pkt) {
 	CLASS_INFO << "   IFStage::instPacketHandler() has received InstPacket @PC=" << ((InstPacket*)pkt)->pc
-	           << " from soc-s and push it to prIF2EXE-in";
+	           << " from soc-s and push it to prIF2ID-in";
 
-	// push to the prIF2EXE register
-	if (!this->getPipeRegister("prIF2EXE-in")->push(pkt)) { CLASS_ERROR << "IFStage failed to handle an InstPacket!"; }
-	WBInstPacket  = EXEInstPacket;
-	EXEInstPacket = (InstPacket*)pkt;
+	// push to the prIF2ID register
+	if (!this->getPipeRegister("prIF2ID-in")->push(pkt)) { CLASS_ERROR << "IFStage failed to handle an InstPacket!"; }
+
+	WBInstPacket  = MEMInstPacket;
+	MEMInstPacket = EXEInstPacket;
+	EXEInstPacket = IDInstPacket;
+	IDInstPacket  = (InstPacket*)pkt;
 }

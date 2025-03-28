@@ -21,7 +21,6 @@
 
 #include "ACALSim.hh"
 #include "InstPacket.hh"
-#include "SOC.hh"
 
 class WBStage : public acalsim::CPPSimBase {
 public:
@@ -31,8 +30,8 @@ public:
 	void init() override {}
 
 	void step() override {
-		if (this->getPipeRegister("prEXE2WB-out")->isValid()) {
-			SimPacket* pkt = this->getPipeRegister("prEXE2WB-out")->pop();
+		if (this->getPipeRegister("prMEM2WB-out")->isValid()) {
+			SimPacket* pkt = this->getPipeRegister("prMEM2WB-out")->pop();
 			this->accept(top->getGlobalTick(), *pkt);
 			CLASS_INFO << "   WBStage step() pop an InstPacket @PC=" << ((InstPacket*)pkt)->pc;
 		}
@@ -41,7 +40,7 @@ public:
 	void cleanup() override {}
 
 	void instPacketHandler(Tick when, InstPacket* pkt) {
-		CLASS_INFO << "   WBStage::instPacketHandler(()  has received from prEXE2WB-out and recycled inst@PC="
+		CLASS_INFO << "   WBStage::instPacketHandler(()  has received from prMEM2WB-out and recycled inst@PC="
 		           << pkt->pc;
 		acalsim::top->getRecycleContainer()->recycle(pkt);
 	}

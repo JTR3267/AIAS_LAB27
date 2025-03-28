@@ -20,7 +20,6 @@
 #include <string>
 
 #include "ACALSim.hh"
-#include "Emulator.hh"
 #include "InstPacket.hh"
 
 class IFStage : public acalsim::CPPSimBase {
@@ -32,11 +31,12 @@ public:
 	void step() override;
 	void cleanup() override {}
 	void instPacketHandler(Tick when, SimPacket* pkt);
-	int  getDestReg(const instr& _inst);
-	bool checkDataHazard(int _rd, const instr& _inst);
 
 private:
+	bool        branchStall   = false;
+	InstPacket* IDInstPacket  = nullptr;
 	InstPacket* EXEInstPacket = nullptr;
+	InstPacket* MEMInstPacket = nullptr;
 	InstPacket* WBInstPacket  = nullptr;
 };
 

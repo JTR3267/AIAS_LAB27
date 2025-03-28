@@ -20,21 +20,17 @@
 #include <string>
 
 #include "ACALSim.hh"
-#include "Emulator.hh"
+#include "InstPacket.hh"
 
 class MEMStage : public acalsim::CPPSimBase {
 public:
-	MEMStage(std::string name, Emulator* _isaEmulator) : acalsim::CPPSimBase(name), isaEmulator(_isaEmulator) {}
+	MEMStage(std::string name) : acalsim::CPPSimBase(name) {}
 	~MEMStage() {}
 
 	void init() override {}
-
-	void step() override {}
-
+	void step() override;
 	void cleanup() override {}
-
-private:
-	Emulator* isaEmulator;
+	void instPacketHandler(Tick when, SimPacket* pkt);
 };
 
 #endif  // SRC_RISCV_INCLUDE_MEMSTAGE_HH_

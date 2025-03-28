@@ -21,7 +21,6 @@
 
 #include "ACALSim.hh"
 #include "InstPacket.hh"
-#include "SOC.hh"
 
 class EXEStage : public acalsim::CPPSimBase {
 public:
@@ -32,9 +31,6 @@ public:
 	void step() override;
 	void cleanup() override {}
 	void instPacketHandler(Tick when, SimPacket* pkt);
-
-private:
-	InstPacket* WBInstPacket = nullptr;
 };
 
 #endif  // SRC_RISCV_INCLUDE_EXESTAGE_HH_
