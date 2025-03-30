@@ -1,0 +1,6 @@
+.text
+li      t0, 0x100000
+li      t1, 0x13
+sw      t1, 4(t0)
+lw      x9, 4(t0)
+hcf

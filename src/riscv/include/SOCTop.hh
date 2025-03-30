@@ -13,21 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RISCV_INCLUDE_SOCTOP_HH_
-#define RISCV_INCLUDE_SOCTOP_HH_
+#ifndef HW2_INCLUDE_SOCTOP_HH_
+#define HW2_INCLUDE_SOCTOP_HH_
 
 #include <string>
 
 #include "ACALSim.hh"
-#include "EXEStage.hh"
+#include "CPU.hh"
+#include "DMA.hh"
+#include "DataMemory.hh"
 #include "Emulator.hh"
-#include "IDStage.hh"
-#include "IFStage.hh"
-#include "MEMStage.hh"
-#include "SOC.hh"
 #include "SystemConfig.hh"
-#include "TopPipeRegisterManager.hh"
-#include "WBStage.hh"
+#include "SystolicArray.hh"
 
 /**
  * @class SOCTop
@@ -80,62 +77,122 @@ public:
 	}
 
 	void registerSimulators() override {
-		this->soc  = new SOC("top-level soc");
-		this->sIF  = new IFStage("IF stage model");
-		this->sID  = new IDStage("ID stage model");
-		this->sEXE = new EXEStage("EXE stage model");
-		this->sMEM = new MEMStage("MEM stage model");
-		this->sWB  = new WBStage("WB stage model");
+		size_t mem_size          = acalsim::top->getParameter<int>("Emulator", "memory_size");
+		size_t sa_reg_base_addr  = acalsim::top->getParameter<int>("SOC", "accel_reg_base_addr");
+		size_t sa_reg_size       = acalsim::top->getParameter<int>("SOC", "accel_reg_size");
+		size_t sa_buf_base_addr  = acalsim::top->getParameter<int>("SOC", "accel_buf_base_addr");
+		size_t sa_buf_size       = acalsim::top->getParameter<int>("SOC", "accel_buf_size");
+		size_t dma_reg_base_addr = acalsim::top->getParameter<int>("SOC", "dma_reg_base_addr");
+		size_t dma_reg_size      = acalsim::top->getParameter<int>("SOC", "dma_reg_size");
 
-		this->addSimulator(this->soc);
-		this->addSimulator(this->sIF);
-		this->addSimulator(this->sID);
-		this->addSimulator(this->sEXE);
-		this->addSimulator(this->sMEM);
-		this->addSimulator(this->sWB);
+		this->bus         = new acalsim::crossbar::CrossBar("Bus", 6, 9);
+		this->dma         = new DMA("DMA", dma_reg_base_addr, dma_reg_size);
+		this->dmem        = new DataMemory("Data Memory", mem_size);
+		this->isaEmulator = new Emulator("RISCV RV32I Emulator");
+		this->cpu         = new CPU("Single-Cycle CPU Model", this->isaEmulator);
+		this->systolicArray =
+		    new SystolicArray("Systolic Array", sa_reg_base_addr, sa_reg_size, sa_buf_base_addr, sa_buf_size);
 
-		// Create SimPort connection between SOC(functional modeling) and sIF(timing model)
-		// SOC only sends an instruction to the IF stage only when there is no backpressue
-		/* SOC -> sIF */
-		this->soc->addMasterPort("sIF-m");
-		this->sIF->addSlavePort("soc-s", 1);
-		// connect SimPort
-		acalsim::SimPortManager::ConnectPort(this->soc, this->sIF, "sIF-m", "soc-s");
+		this->addSimulator(this->cpu);
+		this->addSimulator(this->bus);
+		this->addSimulator(this->dma);
+		this->addSimulator(this->dmem);
+		this->addSimulator(this->systolicArray);
+
+		this->cpu->addDownStream(this->dmem, "DSmem");
+
+		this->cpu->addSlavePort("bus2cpu-resp-s", 1);
+		this->cpu->addSlavePort("bus2cpu-wresp-s", 1);
+		this->cpu->addSlavePort("bus2cpu-wdresp-s", 1);
+		this->dma->addSlavePort("bus2dma-rr-s", 1);
+		this->dma->addSlavePort("bus2dma-wr-s", 1);
+		this->dma->addSlavePort("bus2dma-wd-s", 1);
+		this->dma->addSlavePort("bus2dma-resp-s", 1);
+		this->dma->addSlavePort("bus2dma-wresp-s", 1);
+		this->dma->addSlavePort("bus2dma-wdresp-s", 1);
+		this->dmem->addSlavePort("bus2mem-rr-s", 1);
+		this->dmem->addSlavePort("bus2mem-wr-s", 1);
+		this->dmem->addSlavePort("bus2mem-wd-s", 1);
+		this->systolicArray->addSlavePort("bus2sa-rr-s", 1);
+		this->systolicArray->addSlavePort("bus2sa-wr-s", 1);
+		this->systolicArray->addSlavePort("bus2sa-wd-s", 1);
+
+		// Register PRMasterPort to MasterTBSim for the request channel
+		this->cpu->addPRMasterPort("cpu2bus-rr-m", this->bus->getPipeRegister("Req", 0));
+		this->cpu->addPRMasterPort("cpu2bus-wr-m", this->bus->getPipeRegister("Req", 1));
+		this->cpu->addPRMasterPort("cpu2bus-wd-m", this->bus->getPipeRegister("Req", 2));
+		this->dma->addPRMasterPort("dma2bus-rr-m", this->bus->getPipeRegister("Req", 3));
+		this->dma->addPRMasterPort("dma2bus-wr-m", this->bus->getPipeRegister("Req", 4));
+		this->dma->addPRMasterPort("dma2bus-wd-m", this->bus->getPipeRegister("Req", 5));
+
+		// Simport Connection (Bus <> SlavePort at Devices)
+		for (auto mp : bus->getMasterPortsBySlave("Req", 0)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->dmem, mp->getName(), "bus2mem-rr-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Req", 1)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->dmem, mp->getName(), "bus2mem-wr-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Req", 2)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->dmem, mp->getName(), "bus2mem-wd-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Req", 3)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->dma, mp->getName(), "bus2dma-rr-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Req", 4)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->dma, mp->getName(), "bus2dma-wr-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Req", 5)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->dma, mp->getName(), "bus2dma-wd-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Req", 6)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->systolicArray, mp->getName(), "bus2sa-rr-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Req", 7)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->systolicArray, mp->getName(), "bus2sa-wr-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Req", 8)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->systolicArray, mp->getName(), "bus2sa-wd-s");
+		}
+
+		// Register PRMasterPort to SlaveTBSim for the response channel
+		this->dmem->addPRMasterPort("mem2bus-resp-m", this->bus->getPipeRegister("Resp", 0));
+		this->dma->addPRMasterPort("dma2bus-resp-m", this->bus->getPipeRegister("Resp", 3));
+		this->systolicArray->addPRMasterPort("sa2bus-resp-m", this->bus->getPipeRegister("Resp", 6));
+
+		// Simport Connection (Bus <> SlavePort at Devices)
+		for (auto mp : bus->getMasterPortsBySlave("Resp", 0)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->cpu, mp->getName(), "bus2cpu-resp-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Resp", 1)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->cpu, mp->getName(), "bus2cpu-wresp-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Resp", 2)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->cpu, mp->getName(), "bus2cpu-wdresp-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Resp", 3)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->dma, mp->getName(), "bus2dma-resp-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Resp", 4)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->dma, mp->getName(), "bus2dma-wresp-s");
+		}
+		for (auto mp : bus->getMasterPortsBySlave("Resp", 5)) {
+			acalsim::SimPortManager::ConnectPort(this->bus, this->dma, mp->getName(), "bus2dma-wdresp-s");
+		}
 	}
 
 	void registerPipeRegisters() override {
-		// SimPipeRegister Setup
-		// IF ->prIF2EXE->EXE->prEXE2WB->WB
-
-		acalsim::SimPipeRegister* prIF2ID   = new acalsim::SimPipeRegister("prIF2ID");
-		acalsim::SimPipeRegister* prID2EXE  = new acalsim::SimPipeRegister("prID2EXE");
-		acalsim::SimPipeRegister* prEXE2MEM = new acalsim::SimPipeRegister("prEXE2MEM");
-		acalsim::SimPipeRegister* prMEM2WB  = new acalsim::SimPipeRegister("prMEM2WB");
-
-		this->pipeRegisterManager = new TopPipeRegisterManager("Top-Level Pipe Register Manager");
-		this->pipeRegisterManager->addPipeRegister(prIF2ID);
-		this->pipeRegisterManager->addPipeRegister(prID2EXE);
-		this->pipeRegisterManager->addPipeRegister(prEXE2MEM);
-		this->pipeRegisterManager->addPipeRegister(prMEM2WB);
-
-		this->sIF->addPRMasterPort("prIF2ID-in", prIF2ID);
-		this->sID->addPRSlavePort("prIF2ID-out", prIF2ID);
-		this->sID->addPRMasterPort("prID2EXE-in", prID2EXE);
-		this->sEXE->addPRSlavePort("prID2EXE-out", prID2EXE);
-		this->sEXE->addPRMasterPort("prEXE2MEM-in", prEXE2MEM);
-		this->sMEM->addPRSlavePort("prEXE2MEM-out", prEXE2MEM);
-		this->sMEM->addPRMasterPort("prMEM2WB-in", prMEM2WB);
-		this->sWB->addPRSlavePort("prMEM2WB-out", prMEM2WB);
+		this->SimTop::registerPipeRegisters();
+		for (auto reg : bus->getAllPipeRegisters("Req")) this->getPipeRegisterManager()->addPipeRegister(reg);
+		for (auto reg : bus->getAllPipeRegisters("Resp")) this->getPipeRegisterManager()->addPipeRegister(reg);
 	}
 
 private:
-	SOC*      soc;
-	Emulator* isaEmulator;
-	IFStage*  sIF;
-	IDStage*  sID;
-	EXEStage* sEXE;
-	MEMStage* sMEM;
-	WBStage*  sWB;
+	CPU*                         cpu;
+	acalsim::crossbar::CrossBar* bus;
+	DMA*                         dma;
+	DataMemory*                  dmem;
+	Emulator*                    isaEmulator;
+	SystolicArray*               systolicArray;
 };
 
 #endif

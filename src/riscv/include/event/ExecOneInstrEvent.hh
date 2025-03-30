@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef SOC_INCLUDE_EVENT_EXECONEINSTREVENT_HH_
-#define SOC_INCLUDE_EVENT_EXCONEINSTREVENT_HH_
+#ifndef HW2_INCLUDE_EVENT_EXECONEINSTREVENT_HH_
+#define HW2_INCLUDE_EVENT_EXECONEINSTREVENT_HH_
 
 #include "ACALSim.hh"
 #include "DataStruct.hh"

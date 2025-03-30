@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef SOC_INCLUDE_DATASTRUCT_HH_
-#define SOC_INCLUDE_DATASTRUCT_HH_
+#ifndef HW2_INCLUDE_DATASTRUCT_HH_
+#define HW2_INCLUDE_DATASTRUCT_HH_
 
 #include <cstdint>
 #include <cstdlib>

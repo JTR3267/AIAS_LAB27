@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef SOC_INCLUDE_SYSTEMCONFIG_HH_
-#define SOC_INCLUDE_SYSTEMCONFIG_HH_
+#ifndef HW2_INCLUDE_SYSTEMCONFIG_HH_
+#define HW2_INCLUDE_SYSTEMCONFIG_HH_
 
 #include <string>
 
@@ -76,6 +76,12 @@ public:
 	SOCConfig(const std::string& _name) : acalsim::SimConfig(_name) {
 		this->addParameter<acalsim::Tick>("memory_read_latency", 1, acalsim::ParamType::TICK);
 		this->addParameter<acalsim::Tick>("memory_write_latency", 1, acalsim::ParamType::TICK);
+		this->addParameter<int>("accel_reg_base_addr", 0x100000, acalsim::ParamType::INT);
+		this->addParameter<int>("accel_reg_size", 36, acalsim::ParamType::INT);
+		this->addParameter<int>("accel_buf_base_addr", 0x200000, acalsim::ParamType::INT);
+		this->addParameter<int>("accel_buf_size", 0x100000, acalsim::ParamType::INT);
+		this->addParameter<int>("dma_reg_base_addr", 0x300000, acalsim::ParamType::INT);
+		this->addParameter<int>("dma_reg_size", 0x100000, acalsim::ParamType::INT);
 	}
 
 	/**

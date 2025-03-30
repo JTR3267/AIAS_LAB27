@@ -28,21 +28,27 @@ get_filename_component(
 set(APP_LIB_NAME riscv)
 
 set(LIBS_SRCS
-    CPU.cc
+    event/DMAInitTransferEvent.cc
+    event/DMAReadRespEvent.cc
+    event/DMAReqDoneEvent.cc
+    event/DMATriggerTransferEvent.cc
+    event/DMAWriteDataEvent.cc
+    event/DMAWriteReqEvent.cc
     event/ExecOneInstrEvent.cc
-    event/MemReqEvent.cc
-    MemPacket.cc
-    InstPacket.cc
+    event/MemReadRespEvent.cc
+    event/MemReqDoneEvent.cc
+    event/SACalDoneEvent.cc
+    event/SAInitEvent.cc
+    event/SAReadRespEvent.cc
+    event/SAReqDoneEvent.cc
+    event/SAStepEvent.cc
     BaseMemory.cc
+    CPU.cc
     DataMemory.cc
+    DMA.cc
     Emulator.cc
-    SOC.cc
-    TopPipeRegisterManager.cc
-    IFStage.cc
-    IDStage.cc
-    EXEStage.cc
-    MEMStage.cc
-    InstrParse.cc
+    MemPacket.cc
+    SystolicArray.cc
 )
 # ##########################################################################
 # # Build rules

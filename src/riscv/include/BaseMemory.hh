@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef SOC_INCLUDE_BASEMEMORY_HH_
-#define SOC_INCLUDE_BASEMEMORY_HH_
+#ifndef HW2_INCLUDE_BASEMEMORY_HH_
+#define HW2_INCLUDE_BASEMEMORY_HH_
 
 #include <cstddef>
 #include <cstdint>

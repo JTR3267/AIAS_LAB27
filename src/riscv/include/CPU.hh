@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef SOC_INCLUDE_CPU_HH_
-#define SOC_INCLUDE_CPU_HH_
+#ifndef HW2_INCLUDE_CPU_HH_
+#define HW2_INCLUDE_CPU_HH_
 
 #include <string>
 
@@ -23,23 +23,20 @@
 #include "DataMemory.hh"
 #include "DataStruct.hh"
 #include "Emulator.hh"
-#include "InstPacket.hh"
 #include "MemPacket.hh"
-
-class SOC;
 
 /**
  * @class CPU A CPU model integrated with CPU ISA Emulator
  * @brief Implements a basic CPU with instruction execution, memory operations, and register file
  */
-class CPU : public acalsim::SimModule {
+class CPU : public acalsim::CPPSimBase {
 public:
 	/**
 	 * @brief Constructor for the CPU class
 	 * @param _name Name identifier for the CPU instance
 	 * @param _emulator Pointer to the ISA emulator
 	 */
-	CPU(std::string _name, SOC* _soc);
+	CPU(std::string _name, Emulator* _emulator);
 
 	/**
 	 * @brief Destructor that frees instruction memory
@@ -55,15 +52,14 @@ public:
 	 * @brief Execute an instruction
 	 * @param _i The instruction to execute
 	 */
-	void processInstr(const instr& _i, InstPacket* instPacket);
+	void processInstr(const instr& _i);
 
 	/**
 	 * @brief Commits an instruction after execution
 	 * @param _i The instruction to commit
 	 */
-	void commitInstr(const instr& _i, InstPacket* instPacket);
+	void commitInstr(const instr& _i);
 
-	void retrySendInstPacket(MasterPort* mp);
 	/**
 	 * @brief Performs a memory read operation
 	 * @param _i The instruction requesting the read
@@ -72,7 +68,7 @@ public:
 	 * @param _a1 Operand for storing the read data
 	 * @return Whether the memory access is done or not
 	 */
-	bool memRead(const instr& _i, instr_type _op, uint32_t _addr, operand _a1, InstPacket* instPacket);
+	bool memRead(const instr& _i, instr_type _op, uint32_t _addr, operand _a1);
 
 	/**
 	 * @brief Performs a memory write operation
@@ -82,7 +78,13 @@ public:
 	 * @param _data Data to write
 	 * @return Whether the memory access is done or not
 	 */
-	bool memWrite(const instr& _i, instr_type _op, uint32_t _addr, uint32_t _data, InstPacket* instPacket);
+	bool memWrite(const instr& _i, instr_type _op, uint32_t _addr, uint32_t _data);
+
+	/**
+	 * @brief Handles response from memory read operations
+	 * @param _pkt Packet containing memory read response data
+	 */
+	void cpuReadRespHandler(acalsim::Tick _when, MemReadRespPacket* _memReadRespPkt);
 
 	/**
 	 * @brief Returns pointer to instruction memory
@@ -94,6 +96,12 @@ public:
 	 * @brief Prints the contents of the register file
 	 */
 	void printRegfile() const;
+
+	void init() final;
+
+	void step() final;
+
+	void cleanup() final;
 
 protected:
 	/**
@@ -122,13 +130,11 @@ protected:
 	inline const int& getInstCount() const { return this->inst_cnt; }
 
 private:
-	instr*      imem;         ///< Pointer to instruction memory
-	Emulator*   isaEmulator;  ///< Pointer to the ISA emulator
-	uint32_t    rf[32];       ///< Register file with 32 general-purpose registers
-	uint32_t    pc;           ///< Program counter
-	int         inst_cnt;     ///< Counter for executed instructions
-	InstPacket* pendingInstPacket;
-	SOC*        soc;
+	instr*    imem;         ///< Pointer to instruction memory
+	Emulator* isaEmulator;  ///< Pointer to the ISA emulator
+	uint32_t  rf[32];       ///< Register file with 32 general-purpose registers
+	uint32_t  pc;           ///< Program counter
+	int       inst_cnt;     ///< Counter for executed instructions
 };
 
 #endif

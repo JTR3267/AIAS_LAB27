@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef SOC_INCLUDE_DATAMEMORY_HH_
-#define SOC_INCLUDE_DATAMEMORY_HH_
+#ifndef HW2_INCLUDE_DATAMEMORY_HH_
+#define HW2_INCLUDE_DATAMEMORY_HH_
 
+#include <queue>
 #include <string>
 
 #include "ACALSim.hh"
 #include "BaseMemory.hh"
 #include "DataStruct.hh"
 #include "MemPacket.hh"
+
+typedef struct MemReqInfo {
+	acalsim::SimPacket* memReqPkt;
+	int                 validBytes;
+	uint32_t            data;
+} MemReqInfo;
 
 /**
  * @class DataMemory
@@ -31,14 +38,14 @@
  *          Inherits from SimModule for simulation functionality and BaseMemory
  *          for basic memory operations
  */
-class DataMemory : public acalsim::SimModule, public BaseMemory {
+class DataMemory : public acalsim::CPPSimBase, public BaseMemory {
 public:
 	/**
 	 * @brief Constructor for DataMemory
 	 * @param _name Name identifier for the memory module
 	 * @param _size Size of the memory in bytes
 	 */
-	DataMemory(std::string _name, size_t _size) : acalsim::SimModule(_name), BaseMemory(_size) {}
+	DataMemory(std::string _name, size_t _size) : acalsim::CPPSimBase(_name), BaseMemory(_size) {}
 
 	/**
 	 * @brief Virtual destructor
@@ -51,7 +58,7 @@ public:
 	 * @param _memReqPkt Pointer to the memory read request packet
 	 * @details Processes incoming read requests and generates appropriate responses
 	 */
-	uint32_t memReadReqHandler(acalsim::Tick _when, MemReadReqPacket* _memReqPkt);
+	void memReadReqHandler(MemReadReqPacket* _memReadReqPkt);
 
 	/**
 	 * @brief Handles memory write request packets
@@ -59,7 +66,25 @@ public:
 	 * @param _memReqPkt Pointer to the memory write request packet
 	 * @details Processes incoming write requests and updates memory contents
 	 */
-	void memWriteReqHandler(acalsim::Tick _when, MemWriteReqPacket* _memReqPkt);
+	void memWriteReqHandler(MemWriteReqPacket* _memWriteReqPkt, int validBytes, uint32_t data);
+
+	void memReqHandler(acalsim::Tick _when, acalsim::SimPacket* _memReqPkt);
+
+	void triggerNextReq();
+
+	void dumpMemory(uint32_t start, uint32_t end, std::string file_path);
+
+	void sendReadResp(MemReadRespPacket* readRespPkt);
+
+	void step() final;
+
+	void cleanup() final;
+
+private:
+	std::queue<MemReqInfo> pending_req_queue;
+	MemWriteReqPacket*     unmatchWriteReq  = nullptr;
+	MemWriteDataPacket*    unmatchWriteData = nullptr;
+	bool                   is_idle          = true;
 };
 
 #endif
