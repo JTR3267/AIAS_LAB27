@@ -78,6 +78,7 @@ public:
 
 	void registerSimulators() override {
 		size_t mem_size          = acalsim::top->getParameter<int>("Emulator", "memory_size");
+		size_t sa_size           = acalsim::top->getParameter<int>("SOC", "systolic_array_size");
 		size_t sa_reg_base_addr  = acalsim::top->getParameter<int>("SOC", "accel_reg_base_addr");
 		size_t sa_reg_size       = acalsim::top->getParameter<int>("SOC", "accel_reg_size");
 		size_t sa_buf_base_addr  = acalsim::top->getParameter<int>("SOC", "accel_buf_base_addr");
@@ -91,7 +92,7 @@ public:
 		this->isaEmulator = new Emulator("RISCV RV32I Emulator");
 		this->cpu         = new CPU("Single-Cycle CPU Model", this->isaEmulator);
 		this->systolicArray =
-		    new SystolicArray("Systolic Array", sa_reg_base_addr, sa_reg_size, sa_buf_base_addr, sa_buf_size);
+		    new SystolicArray("Systolic Array", sa_size, sa_reg_base_addr, sa_reg_size, sa_buf_base_addr, sa_buf_size);
 
 		this->addSimulator(this->cpu);
 		this->addSimulator(this->bus);

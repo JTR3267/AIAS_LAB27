@@ -39,9 +39,11 @@ set(LIBS_SRCS
     event/MemReqDoneEvent.cc
     event/SACalDoneEvent.cc
     event/SAInitEvent.cc
+    event/SAParseConfigEvent.cc
     event/SAReadRespEvent.cc
     event/SAReqDoneEvent.cc
     event/SAStepEvent.cc
+    event/SATriggerDoneEvent.cc
     BaseMemory.cc
     CPU.cc
     DataMemory.cc

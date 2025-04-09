@@ -2,18 +2,23 @@
 
 #include "event/SACalDoneEvent.hh"
 #include "event/SAInitEvent.hh"
+#include "event/SAParseConfigEvent.hh"
 #include "event/SAReadRespEvent.hh"
 #include "event/SAReqDoneEvent.hh"
 #include "event/SAStepEvent.hh"
+#include "event/SATriggerDoneEvent.hh"
 
-SystolicArray::SystolicArray(std::string _name, int _reg_base_addr, int _reg_size, int _buf_base_addr, int _buf_size)
+SystolicArray::SystolicArray(std::string _name, u_int32_t _sa_size, int _reg_base_addr, int _reg_size,
+                             int _buf_base_addr, int _buf_size)
     : acalsim::CPPSimBase(_name),
+      sa_size(_sa_size),
       reg_base_addr(_reg_base_addr),
       reg_size(_reg_size),
       buf_base_addr(_buf_base_addr),
       buf_size(_buf_size) {
 	for (int i = 0; i < 9; i++) { this->rf[i] = 0; }
-	this->rf[8] = 0x10101;
+	this->rf[8]   = 0x10101;
+	this->peArray = new PE[this->sa_size * this->sa_size];
 }
 
 void SystolicArray::step() {
@@ -164,26 +169,26 @@ void SystolicArray::saWriteReqHandler(MemWriteReqPacket* _memWriteReqPkt, uint32
 	this->scheduleEvent(saReqDoneEvent, acalsim::top->getGlobalTick() + 1);
 
 	if (this->rf[0] & 1) {
-		SAInitEvent* saInitEvent = rc->acquire<SAInitEvent>(&SAInitEvent::renew, this);
-		this->scheduleEvent(saInitEvent, acalsim::top->getGlobalTick() + 1);
+		SAParseConfigEvent* event = rc->acquire<SAParseConfigEvent>(&SAParseConfigEvent::renew, this);
+		this->scheduleEvent(event, acalsim::top->getGlobalTick() + 1);
 	}
 
 	rc->recycle(_memWriteReqPkt);
 }
 
-void SystolicArray::initSystolicArray() {
-	auto matrixAHeight = (rf[2] & 0xfff) + 1;
-	auto matrixAWidth  = ((rf[2] >> 12) & 0xfff) + 1;
-	auto matrixBHeight = (rf[3] & 0xfff) + 1;
-	auto matrixBWidth  = ((rf[3] >> 12) & 0xfff) + 1;
-	auto matrixCHeight = (rf[4] & 0xfff) + 1;
-	auto matrixCWidth  = ((rf[4] >> 12) & 0xfff) + 1;
-	auto matrixAAddr   = rf[5];
-	auto matrixBAddr   = rf[6];
-	auto matrixCAddr   = rf[7];
-	auto matrixAStride = rf[8] & 0xff;
-	auto matrixBStride = (rf[8] >> 8) & 0xff;
-	auto matrixCStride = (rf[8] >> 16) & 0xff;
+void SystolicArray::saParseConfig() {
+	auto matrixAHeight  = (rf[2] & 0xfff) + 1;
+	auto matrixAWidth   = ((rf[2] >> 12) & 0xfff) + 1;
+	auto matrixBHeight  = (rf[3] & 0xfff) + 1;
+	auto matrixBWidth   = ((rf[3] >> 12) & 0xfff) + 1;
+	auto matrixCHeight  = (rf[4] & 0xfff) + 1;
+	auto matrixCWidth   = ((rf[4] >> 12) & 0xfff) + 1;
+	auto matrixAAddr    = rf[5];
+	auto matrixBAddr    = rf[6];
+	auto matrixCAddr    = rf[7];
+	auto matrixAStride  = rf[8] & 0xff;
+	auto matrixBStride  = (rf[8] >> 8) & 0xff;
+	this->matrixCStride = (rf[8] >> 16) & 0xff;
 
 	if (matrixAHeight > 1) { ASSERT_MSG(matrixAStride >= 4 * matrixAWidth, "Wrong systolic array config."); }
 	if (matrixBHeight > 1) { ASSERT_MSG(matrixBStride >= 4 * matrixBWidth, "Wrong systolic array config."); }
@@ -192,48 +197,88 @@ void SystolicArray::initSystolicArray() {
 	ASSERT_MSG(matrixCHeight == matrixAHeight && matrixCWidth == matrixBWidth,
 	           "Output matrix dimensions must match A.height x B.width");
 
-	this->matrixA       = new uint32_t[matrixAHeight * matrixAWidth];
-	this->matrixB       = new uint32_t[matrixBHeight * matrixBWidth];
-	this->peArray       = new PE[matrixCHeight * matrixCWidth];
-	this->matrixAWidth  = matrixAWidth;
-	this->matrixCHeight = matrixCHeight;
-	this->matrixCWidth  = matrixCWidth;
-	this->matrixCAddr   = matrixCAddr;
-	this->matrixCStride = matrixCStride;
-	this->currentCycle  = 0;
+	int sliceACount = (matrixAHeight + this->sa_size - 1) / this->sa_size;
+	int sliceBCount = (matrixBWidth + this->sa_size - 1) / this->sa_size;
 
-	for (int i = 0; i < matrixAHeight; i++) {
-		for (int j = 0; j < matrixAWidth; j++) {
-			void* data = (uint8_t*)this->buf + (matrixAAddr - this->buf_base_addr + i * matrixAStride + 4 * j);
-			this->matrixA[i * matrixAWidth + j] = *(uint32_t*)data;
+	for (int i = 0; i < sliceACount; i++) {
+		auto      height  = std::min(this->sa_size, matrixAHeight - i * this->sa_size);
+		uint32_t* matrixA = new uint32_t[height * matrixAWidth];
+		for (int j = 0; j < height; j++) {
+			for (int k = 0; k < matrixAWidth; k++) {
+				void* data = (uint8_t*)this->buf +
+				             (matrixAAddr - this->buf_base_addr + (i * this->sa_size + j) * matrixAStride + 4 * k);
+				matrixA[j * matrixAWidth + k] = *(uint32_t*)data;
+			}
 		}
+		this->matrixAVector.push_back({matrixA, height, matrixAWidth});
 	}
-	for (int i = 0; i < matrixBHeight; i++) {
-		for (int j = 0; j < matrixBWidth; j++) {
-			void* data = (uint8_t*)this->buf + (matrixBAddr - this->buf_base_addr + i * matrixBStride + 4 * j);
-			this->matrixB[i * matrixBWidth + j] = *(uint32_t*)data;
+	for (int i = 0; i < sliceBCount; i++) {
+		auto      width   = std::min(this->sa_size, matrixBWidth - i * this->sa_size);
+		uint32_t* matrixB = new uint32_t[matrixBHeight * width];
+		for (int j = 0; j < matrixBHeight; j++) {
+			for (int k = 0; k < width; k++) {
+				void* data = (uint8_t*)this->buf +
+				             (matrixBAddr - this->buf_base_addr + j * matrixBStride + (i * this->sa_size + k) * 4);
+				matrixB[j * width + k] = *(uint32_t*)data;
+			}
 		}
-	}
-	for (int i = 0; i < matrixCHeight; i++) {
-		for (int j = 0; j < matrixCWidth; j++) {
-			this->peArray[i * matrixCWidth + j].a_in                = 0;
-			this->peArray[i * matrixCWidth + j].b_in                = 0;
-			this->peArray[i * matrixCWidth + j].pass_a_right        = false;
-			this->peArray[i * matrixCWidth + j].pass_b_down         = false;
-			this->peArray[i * matrixCWidth + j].has_input_from_top  = false;
-			this->peArray[i * matrixCWidth + j].has_input_from_left = false;
-			this->peArray[i * matrixCWidth + j].partial_sum         = 0;
-		}
+		this->matrixBVector.push_back({matrixB, matrixBHeight, width});
 	}
 
-	systolicArrayStep();
+	for (int i = 0; i < this->matrixAVector.size(); i++) {
+		for (int j = 0; j < this->matrixBVector.size(); j++) {
+			ASSERT_MSG(this->matrixAVector[i].width == this->matrixBVector[j].height,
+			           "Dimension mismatch: A.width must equal B.height");
+			auto addr = matrixCAddr + (i * this->sa_size * this->matrixCStride + 4 * j * this->sa_size);
+			this->saCalQueue.push({this->matrixAVector[i].matrix, this->matrixBVector[j].matrix,
+			                       this->matrixAVector[i].width, this->matrixAVector[i].height,
+			                       this->matrixBVector[j].width, addr});
+		}
+	}
+
+	SAInitEvent* saInitEvent = acalsim::top->getRecycleContainer()->acquire<SAInitEvent>(&SAInitEvent::renew, this);
+	this->scheduleEvent(saInitEvent, acalsim::top->getGlobalTick() + 1);
+}
+
+void SystolicArray::initSystolicArray() {
+	if (!this->saCalQueue.empty()) {
+		auto calInfo = this->saCalQueue.front();
+		this->saCalQueue.pop();
+
+		this->matrixA        = calInfo.matrixA;
+		this->matrixB        = calInfo.matrixB;
+		this->matrixAWidth   = calInfo.matrixAWidth;
+		this->matrixCHeight  = calInfo.matrixCHeight;
+		this->matrixCWidth   = calInfo.matrixCWidth;
+		this->matrixCAddr    = calInfo.matrixCAddr;
+		this->estimatedCycle = calInfo.matrixCHeight + calInfo.matrixAWidth + calInfo.matrixCWidth - 2;
+		this->currentCycle   = 0;
+
+		for (int i = 0; i < this->matrixCHeight; i++) {
+			for (int j = 0; j < this->matrixCWidth; j++) {
+				int pos                                = i * this->sa_size + j;
+				this->peArray[pos].a_in                = 0;
+				this->peArray[pos].b_in                = 0;
+				this->peArray[pos].pass_a_right        = false;
+				this->peArray[pos].pass_b_down         = false;
+				this->peArray[pos].has_input_from_top  = false;
+				this->peArray[pos].has_input_from_left = false;
+				this->peArray[pos].partial_sum         = 0;
+			}
+		}
+
+		SAStepEvent* saStepEvent = acalsim::top->getRecycleContainer()->acquire<SAStepEvent>(&SAStepEvent::renew, this);
+		this->scheduleEvent(saStepEvent, acalsim::top->getGlobalTick() + 1);
+	} else {
+		CLASS_ERROR << "Calculation done, should not trigger init!";
+	}
 }
 
 void SystolicArray::systolicArrayStep() {
 	// clear has_input_from_left, has_input_from_top
 	for (int i = 0; i < this->matrixCHeight; i++) {
 		for (int j = 0; j < this->matrixCWidth; j++) {
-			int pos                                = i * this->matrixCWidth + j;
+			int pos                                = i * this->sa_size + j;
 			this->peArray[pos].has_input_from_left = false;
 			this->peArray[pos].has_input_from_top  = false;
 		}
@@ -241,7 +286,7 @@ void SystolicArray::systolicArrayStep() {
 	// propogate from left to right
 	for (int i = 0; i < this->matrixCHeight; i++) {
 		for (int j = this->matrixCWidth - 2; j >= 0; j--) {
-			int pos = i * this->matrixCWidth + j;
+			int pos = i * this->sa_size + j;
 			if (this->peArray[pos].pass_a_right) {
 				this->peArray[pos + 1].a_in                = this->peArray[pos].a_in;
 				this->peArray[pos + 1].has_input_from_left = true;
@@ -252,23 +297,23 @@ void SystolicArray::systolicArrayStep() {
 	// propogate from top to bottom
 	for (int i = this->matrixCHeight - 2; i >= 0; i--) {
 		for (int j = 0; j < this->matrixCWidth; j++) {
-			int pos = i * this->matrixCWidth + j;
+			int pos = i * this->sa_size + j;
 			if (this->peArray[pos].pass_b_down) {
-				this->peArray[pos + this->matrixCWidth].b_in               = this->peArray[pos].b_in;
-				this->peArray[pos + this->matrixCWidth].has_input_from_top = true;
+				this->peArray[pos + this->sa_size].b_in               = this->peArray[pos].b_in;
+				this->peArray[pos + this->sa_size].has_input_from_top = true;
 			}
-			this->peArray[pos + this->matrixCWidth].pass_b_down = this->peArray[pos].pass_b_down;
+			this->peArray[pos + this->sa_size].pass_b_down = this->peArray[pos].pass_b_down;
 		}
 	}
 	// input data from A
 	for (int i = 0; i < this->matrixCHeight; i++) {
-		this->peArray[i * this->matrixCWidth].pass_a_right = false;
+		this->peArray[i * this->sa_size].pass_a_right = false;
 
 		int a_col = this->currentCycle - i;
 		if (a_col >= 0 && a_col < this->matrixAWidth) {
-			this->peArray[i * this->matrixCWidth].a_in                = this->matrixA[i * this->matrixAWidth + a_col];
-			this->peArray[i * this->matrixCWidth].has_input_from_left = true;
-			this->peArray[i * this->matrixCWidth].pass_a_right        = true;
+			this->peArray[i * this->sa_size].a_in                = this->matrixA[i * this->matrixAWidth + a_col];
+			this->peArray[i * this->sa_size].has_input_from_left = true;
+			this->peArray[i * this->sa_size].pass_a_right        = true;
 		}
 	}
 	// input data from B
@@ -283,38 +328,32 @@ void SystolicArray::systolicArrayStep() {
 		}
 	}
 	// calculate partial sum
-	int calCount = 0;
 	for (int i = 0; i < this->matrixCHeight; i++) {
 		for (int j = 0; j < this->matrixCWidth; j++) {
-			int pos = i * this->matrixCWidth + j;
+			int pos = i * this->sa_size + j;
 			ASSERT_MSG(this->peArray[pos].has_input_from_top == this->peArray[pos].has_input_from_left,
 			           "Error occured while propogating data");
 			if (this->peArray[pos].has_input_from_top) {
 				this->peArray[pos].partial_sum += this->peArray[pos].a_in * this->peArray[pos].b_in;
-				calCount++;
 			}
 		}
 	}
-	// schedule next step or end
+	// schedule next step or calculation done
+	this->currentCycle++;
 	auto rc = acalsim::top->getRecycleContainer();
-	if (calCount == 1 && this->currentCycle > 0) {
+	if (this->currentCycle == this->estimatedCycle) {
 		SACalDoneEvent* saCalDoneEvent = rc->acquire<SACalDoneEvent>(&SACalDoneEvent::renew, this);
 		this->scheduleEvent(saCalDoneEvent, acalsim::top->getGlobalTick() + 1);
 	} else {
 		SAStepEvent* saStepEvent = rc->acquire<SAStepEvent>(&SAStepEvent::renew, this);
 		this->scheduleEvent(saStepEvent, acalsim::top->getGlobalTick() + 1);
 	}
-	this->currentCycle++;
 }
 
 void SystolicArray::systolicArrayCalDone() {
-	this->rf[0] &= ~1;
-	this->rf[1] |= 1;
-	this->rf[8] = 0x10101;
-
 	for (int i = 0; i < this->matrixCHeight; i++) {
 		for (int j = 0; j < this->matrixCWidth; j++) {
-			int      pos   = i * this->matrixCWidth + j;
+			int      pos   = i * this->sa_size + j;
 			uint32_t val32 = this->peArray[pos].partial_sum;
 			CLASS_INFO << "matrixC[" << i << "][" << j << "] = " << val32;
 			std::memcpy(
@@ -323,9 +362,31 @@ void SystolicArray::systolicArrayCalDone() {
 		}
 	}
 
-	delete[] this->matrixA;
-	delete[] this->matrixB;
-	delete[] this->peArray;
+	if (!this->saCalQueue.empty()) {
+		SAInitEvent* saInitEvent = acalsim::top->getRecycleContainer()->acquire<SAInitEvent>(&SAInitEvent::renew, this);
+		this->scheduleEvent(saInitEvent, acalsim::top->getGlobalTick() + 1);
+	} else {
+		SATriggerDoneEvent* saTriggerDoneEvent =
+		    acalsim::top->getRecycleContainer()->acquire<SATriggerDoneEvent>(&SATriggerDoneEvent::renew, this);
+		this->scheduleEvent(saTriggerDoneEvent, acalsim::top->getGlobalTick() + 1);
+	}
+}
+
+void SystolicArray::saTriggerDone() {
+	this->rf[0] &= ~1;
+	this->rf[1] |= 1;
+	this->rf[8] = 0x10101;
+
+	while (this->matrixAVector.size()) {
+		auto matrixA = this->matrixAVector.back().matrix;
+		this->matrixAVector.pop_back();
+		delete[] matrixA;
+	}
+	while (this->matrixBVector.size()) {
+		auto matrixB = this->matrixBVector.back().matrix;
+		this->matrixBVector.pop_back();
+		delete[] matrixB;
+	}
 }
 
 void SystolicArray::sendReadResp(MemReadRespPacket* _memRespPkt) {

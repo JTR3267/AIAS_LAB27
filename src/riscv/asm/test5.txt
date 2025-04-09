@@ -1,0 +1,95 @@
+.data
+matrix_a: .word 0x1, 0x2, 0x3, 0x4
+          .word 0x5, 0x6, 0x7, 0x8
+          .word 0x9, 0xa, 0xb, 0xc
+          .word 0xd, 0xe, 0xf, 0x0
+matrix_b: .word 0x4, 0x3, 0x2, 0x1
+          .word 0x8, 0x7, 0x6, 0x5
+          .word 0xc, 0xb, 0xa, 0x9
+          .word 0x0, 0xf, 0xe, 0xd
+
+.text
+    li  x1, 0x300000
+
+    la  x2, matrix_a
+    li  x3, 0x200000
+    li  x4, 0x10100f03
+
+    li  x5, 1
+
+    # Program DMA
+    sw  x2, 4(x1)
+    sw  x3, 8(x1)
+    sw  x4, 12(x1)
+    sb  x5, 0(x1)
+
+check_complete:
+    # Check whether the DMA command completes
+    lw  x6, 20(x1)
+    and x6, x6, x5
+    beq x6, x0, check_complete
+    sw  x0, 20(x1)
+
+    la  x2, matrix_b
+    li  x3, 0x210000
+    li  x4, 0x10100f03
+
+    li  x5, 1
+
+    # Program DMA
+    sw  x2, 4(x1)
+    sw  x3, 8(x1)
+    sw  x4, 12(x1)
+    sb  x5, 0(x1)
+
+check_complete2:
+    # Check whether the DMA command completes
+    lw  x6, 20(x1)
+    and x6, x6, x5
+    beq x6, x0, check_complete2
+    sw  x0, 20(x1)
+
+    li  x1, 0x100000
+    li  x2, 0x3003
+    li  x3, 0x200000
+    li  x4, 0x210000
+    li  x5, 0x220000
+    li  x6, 0x101010
+    li  x7, 1
+
+    # Program SA
+    sw  x2, 8(x1)
+    sw  x2, 12(x1)
+    sw  x2, 16(x1)
+    sw  x3, 20(x1)
+    sw  x4, 24(x1)
+    sw  x5, 28(x1)
+    sw  x6, 32(x1)
+    sb  x7, 0(x1)
+
+check_complete3:
+    # Check whether the SA command completes
+    lw  x8, 4(x1)
+    and x8, x8, x7
+    beq x8, x0, check_complete3
+    sw  x0, 4(x1)
+
+    lw  x16, 0(x5)
+    lw  x17, 4(x5)
+    lw  x18, 8(x5)
+    lw  x19, 12(x5)
+    lw  x20, 16(x5)
+    lw  x21, 20(x5)
+    lw  x22, 24(x5)
+    lw  x23, 28(x5)
+    lw  x24, 32(x5)
+    lw  x25, 36(x5)
+    lw  x26, 40(x5)
+    lw  x27, 44(x5)
+    lw  x28, 48(x5)
+    lw  x29, 52(x5)
+    lw  x30, 56(x5)
+    lw  x31, 60(x5)
+
+exit:
+    hcf
