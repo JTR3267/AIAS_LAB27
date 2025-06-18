@@ -343,7 +343,7 @@ void SystolicArray::systolicArrayStep() {
 	auto rc = acalsim::top->getRecycleContainer();
 	if (this->currentCycle == this->estimatedCycle) {
 		SACalDoneEvent* saCalDoneEvent = rc->acquire<SACalDoneEvent>(&SACalDoneEvent::renew, this);
-		this->scheduleEvent(saCalDoneEvent, acalsim::top->getGlobalTick() + 1);
+		this->scheduleEvent(saCalDoneEvent, acalsim::top->getGlobalTick() + this->sa_size);
 	} else {
 		SAStepEvent* saStepEvent = rc->acquire<SAStepEvent>(&SAStepEvent::renew, this);
 		this->scheduleEvent(saStepEvent, acalsim::top->getGlobalTick() + 1);
